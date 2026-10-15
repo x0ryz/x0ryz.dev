@@ -100,9 +100,9 @@ const SHOULDER = { y: 8, z: 1, x: 8 };
 const arms = new Map([[-1, new Map()], [1, new Map()]]);
 for (const s of [-1, 1]) {
   vox = arms.get(s);
-  limb([s * SHOULDER.x, SHOULDER.y, SHOULDER.z], [s * 5, 5, 12], 2.4, fur);
-  ellipsoid(s * 4.5, 5, 14, 2, 1.4, 1.8, C.face);
-  for (const f of [-1, 0, 1]) put(s * 4.5 + f, 4, 16, C.faceDark);
+  limb([s * SHOULDER.x, SHOULDER.y, SHOULDER.z], [s * 5, 5, 9], 2.4, fur);
+  ellipsoid(s * 4.5, 5, 11, 2, 1.4, 1.8, C.face);
+  for (const f of [-1, 0, 1]) put(s * 4.5 + f, 4, 13, C.faceDark);
 }
 vox = monkey;
 // Head and the thick fur around the cheeks
@@ -180,15 +180,15 @@ vox = scenery;
 const keyCaps = [];
 const screen = [];
 const laptopLid = new Map();
-const HINGE = { y: 3.6, z: 21.5 };
+const HINGE = { y: 3.6, z: 18.5 };
 for (let x = -8; x <= 8; x++) {
-  for (let z = 13; z <= 21; z++) {
+  for (let z = 10; z <= 18; z++) {
     put(x, 3, z, C.laptop);
-    if (Math.abs(x) <= 6 && z >= 14 && z <= 18 && (x + z) % 2 === 0) keyCaps.push([x, 3.54, z]);
+    if (Math.abs(x) <= 6 && z >= 11 && z <= 15 && (x + z) % 2 === 0) keyCaps.push([x, 3.54, z]);
   }
   for (let y = 4; y <= 12; y++) {
-    laptopLid.set(key(x, y, 22), C.laptop);
-    if (Math.abs(x) <= 7 && y >= 5 && y <= 11) screen.push([x, y, 21.45]);
+    laptopLid.set(key(x, y, 19), C.laptop);
+    if (Math.abs(x) <= 7 && y >= 5 && y <= 11) screen.push([x, y, 18.45]);
   }
 }
 
@@ -207,7 +207,7 @@ for (let x = -22; x <= 22; x += 2)
       for (let dx = 0; dx < 2; dx++)
         for (let dz = 0; dz < 2; dz++) {
           // Nothing on the rocks under the laptop, or it pokes through the base
-          const underLaptop = Math.abs(x + dx) <= 9 && z + dz >= 12;
+          const underLaptop = Math.abs(x + dx) <= 9 && z + dz >= 9;
           if (rand() > S.cells || underLaptop || has(x + dx, top + 1, z + dz)) continue;
           put(x + dx, top + 1, z + dz, S.ground[Math.floor(rand() * S.ground.length)]);
           if (SEASON === "winter" && d > 18.5 && rand() < 0.4) put(x + dx, top + 2, z + dz, C.snow);
@@ -393,7 +393,7 @@ lidPart.add(screenMesh);
 screenMesh.position.set(0, -HINGE.y, -HINGE.z);
 model.add(lidPart);
 const screenLight = new THREE.PointLight(0x5fe3cb, 0, 12, 1.5);
-screenLight.position.set(0, 9, 17);
+screenLight.position.set(0, 9, 14);
 model.add(screenLight);
 let screenGlow = 0;
 
