@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bohdan Barulin</title>
+  <meta name="description" content="Bohdan Barulin, Python backend developer in Lutsk, Ukraine. Author of hakobu, an open-source deploy tool written in Go.">
+  <link rel="canonical" href="https://x0ryz.dev/">
+  <link rel="icon" href="/favicon-winter.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#eef0f2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#161b22" media="(prefers-color-scheme: dark)">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://x0ryz.dev/">
+  <meta property="og:title" content="Bohdan Barulin">
+  <meta property="og:description" content="Python backend developer. Author of hakobu, an open-source deploy tool written in Go.">
+  <meta property="og:image" content="https://x0ryz.dev/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="/fonts/onest-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/season-pick.js"></script>
+</head>
+<body>
+  <canvas class="season-bg" aria-hidden="true"></canvas>
+  <main>
+    <header class="intro">
+      <h1><span>Bohdan</span> <span>Barulin</span></h1>
+      <div class="intro-bottom">
+        <div class="intro-text">
+          <p class="lede">I build Python backends for businesses, and I ship them with a deploy tool I wrote in Go.</p>
+          <p>Computer science student in Lutsk, Ukraine. I like small, boring infrastructure that keeps working.</p>
+        </div>
+        <div class="monkey3d" role="button" tabindex="0" aria-label="Pet the monkey" title="Pet the monkey"></div>
+      </div>
+    </header>
+
+    <section class="row" aria-labelledby="work">
+      <div class="side">
+        <h2 id="work">Experience</h2>
+      </div>
+      <div class="body jobs">
+        <article>
+          <h3>Backend developer, freelance</h3>
+          <p class="when">Dec 2025 – Aug 2026</p>
+          <p>A lead generation and outreach system for a client under NDA. FastAPI, PostgreSQL and HTMX, deployed on a Hetzner&nbsp;VPS.</p>
+          <ul>
+            <li>A scraper for three large classifieds sites that processes 60,000&nbsp;listings from one source in a two-hour run, through a pool of 250&nbsp;rotating proxies.</li>
+            <li>A database of more than 450,000&nbsp;seller records with listing history, filtered through a Procrastinate task queue and exported to Cloudflare&nbsp;R2.</li>
+            <li>Messaging through real Android phones over scrcpy and a WebSocket agent. Work that took three managers nine&nbsp;hours a day now takes one person three&nbsp;hours.</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Automation developer, freelance</h3>
+          <p class="when">Spring 2026</p>
+          <p>Browser automation for multi-step sign-up and verification flows on a platform with strict bot protection: Camoufox with fingerprint management, ten parallel workers, and SMS APIs for one-time codes.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="row feature" aria-labelledby="hakobu">
+      <div class="side">
+        <h2 id="hakobu"><a href="https://github.com/hakobudev/hakobu">hakobu</a></h2>
+        <p class="kind">Open source, Go, MIT</p>
+      </div>
+      <div class="body">
+        <p>Deploys apps from GitHub to servers you own. Push to the default branch, and hakobu builds the new version and swaps it in with no downtime, behind a Cloudflare&nbsp;Tunnel, so the server needs no open ports.</p>
+        <ul class="facts">
+          <li>Blue/green deploys with rollback, including the database</li>
+          <li>Postgres, Valkey and R2 storage per project</li>
+          <li>Encrypted backups that are test-restored after every upload</li>
+          <li>Sentry-compatible errors, logs and traces kept on your server</li>
+          <li>One binary with SQLite, rootless Docker, signed releases</li>
+        </ul>
+        <p class="links"><a href="https://hakobu.dev">hakobu.dev</a> <a href="https://hakobu.dev/docs/">Docs</a> <a href="https://github.com/hakobudev/hakobu">Source</a></p>
+      </div>
+    </section>
+
+    <section class="row" aria-labelledby="edu">
+      <div class="side">
+        <h2 id="edu">Education</h2>
+      </div>
+      <div class="body">
+        <p>BSc in Computer Science at Lutsk National Technical University, 2024–2028.</p>
+        <p>Second place at the Django Pub Hackathon: in a team of three, built sign-in with qualified electronic signatures in three days.</p>
+      </div>
+    </section>
+
+    <footer class="row" aria-labelledby="contact">
+      <div class="side">
+        <h2 id="contact">Contact</h2>
+      </div>
+      <div class="body">
+        <p>Open to Python backend roles.</p>
+        <p class="links contacts">
+          <a href="mailto:hello@x0ryz.dev">hello@x0ryz.dev</a>
+          <a href="https://github.com/x0ryz">GitHub</a>
+          <a href="https://www.linkedin.com/in/x0ryz">LinkedIn</a>
+          <a href="/Bohdan_Barulin_CV.pdf">CV (PDF)</a>
+        </p>
+      </div>
+    </footer>
+  </main>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="/monkey.js"></script>
+  <script src="/season.js"></script>
+</body>
+</html>

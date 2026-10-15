@@ -1,0 +1,78 @@
+# Resume in RenderCV format (https://rendercv.com)
+# Render to PDF: uvx --from "rendercv[full]" rendercv render resume_en.yaml
+
+cv:
+  name: Bohdan Barulin
+  headline: Backend Developer (Python / FastAPI)
+  location: Lutsk, Ukraine
+  email: hello@x0ryz.dev
+  website: https://x0ryz.dev
+  social_networks:
+    - network: LinkedIn
+      username: x0ryz
+    - network: GitHub
+      username: x0ryz
+
+  sections:
+    Summary:
+      - >-
+        Backend developer with hands-on experience in system architecture, high-load
+        data collection pipelines, and business process automation. Built complete
+        solutions solo from scratch: from database design to VPS deployment and
+        custom hardware-software integrations. Specialized in Python (FastAPI),
+        PostgreSQL, and resilient scraping architectures; also build tooling in Go.
+        Focused on resource efficiency and building solutions that measurably save
+        businesses time and money.
+
+    Skills:
+      - label: Languages & DB
+        details: Python (FastAPI), Go, PostgreSQL, SQLite
+      - label: Architecture & Infrastructure
+        details: Docker, WebSockets, Cloudflare R2, Hetzner VPS, background jobs (Procrastinate), process managers (temps), Let's Encrypt, Tailscale, Cloudflare Tunnel
+      - label: Scraping & Automation
+        details: HTML/DOM parsing, Camoufox (anti-detect browser), browser fingerprint management, rotating proxy pools, scrcpy (Android control)
+      - label: Integrations
+        details: RESTful APIs (payment gateways, logistics providers, SMS verification services, Marketing & Ads APIs), GitHub Apps, digital signatures (EDS)
+      - label: Frontend (Full Stack approach)
+        details: HTMX, Alpine.js, Tailwind CSS
+      - label: Languages
+        details: Ukrainian (native), English (B1 — Intermediate)
+
+    Experience:
+      - company: Freelance / NDA
+        position: Backend Developer
+        start_date: 2025-12
+        end_date: 2026-08
+        highlights:
+          - "**Architecture & development:** Designed and built the backend of an end-to-end lead generation and outreach automation system (FastAPI, PostgreSQL, HTMX, Alpine.js, Tailwind). Set up VPS deployment (Hetzner) with the temps process manager; contributed to the tool's open-source repository by reporting issues."
+          - "**High-load scraping:** Built a block-resistant scraper for 3 major classifieds websites (HTML/DOM extraction). A single 2-hour run processes 60,000 listings from one source and identifies up to 10,000 new records. Implemented a pool of 250 rotating proxies with cooldown scheduling."
+          - "**Data engineering:** Reverse-engineered the client-side data rendering of a major automotive marketplace to reliably extract structured listing data. Built and maintained a proprietary database of 450,000+ seller records with listing history and activity tracking."
+          - "**Data processing optimization:** Introduced asynchronous task processing with the Procrastinate queue for fast contact filtering. Automated export of validated data in VCF format to Cloudflare R2."
+          - "**Hardware-software integration:** Integrated physical Android smartphones via a USB hub using scrcpy and a WebSocket agent to automate messaging. Processing 1,000 contacts per day, previously done by 3 managers in 9 hours, is now supervised by 1 person in 3 hours."
+          - "**Marketing integrations:** Set up automatic bi-weekly sync of collected contacts with Facebook Custom Audiences for precise ad targeting."
+
+      - company: Freelance
+        position: Automation Developer
+        date: Spring 2026
+        highlights:
+          - Developed a browser automation pipeline for multi-step user flows (sign-up, verification, data collection) on a platform with strict anti-bot protection.
+          - Used Camoufox with browser fingerprint management to keep sessions stable; ran 10 parallel workers handling up to 100 flows per day.
+          - Integrated third-party SMS verification APIs to fully automate OTP handling.
+
+    Projects:
+      - name: "[hakobu](https://github.com/hakobudev/hakobu) — self-hosted deployment tool (Go, open source)"
+        date: "2026"
+        highlights:
+          - Self-hosted PaaS that deploys apps from GitHub repos to your own server on push to main — a lightweight alternative to paid platforms. Shipped as a single Go binary with SQLite state and a one-command installer.
+          - Zero-downtime blue/green deployments behind a built-in proxy with atomic traffic switching; automatic stack detection (Railpack or Dockerfile).
+          - Built-in PostgreSQL provisioning with scheduled backups to S3/R2, automatic Let's Encrypt HTTPS for per-project domains, optional Tailscale / Cloudflare Tunnel access.
+          - Sentry-compatible error and log ingestion endpoint, so deployed apps need only a SENTRY_DSN.
+
+    Education:
+      - institution: Lutsk National Technical University (LNTU)
+        area: Computer Science
+        degree: BSc
+        start_date: 2024
+        end_date: 2028
+        highlights:
+          - "**2nd place, Django Pub Hackathon:** In a 3-person team, built and presented in 3 days a working user authentication module based on qualified electronic digital signatures (EDS)."

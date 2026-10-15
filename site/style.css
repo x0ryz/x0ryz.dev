@@ -1,0 +1,277 @@
+/* Onest, served from this site (SIL Open Font License, see fonts/OFL.txt) */
+@font-face {
+  font-family: "Onest";
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/onest-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Onest";
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/onest-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Onest";
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/onest-cyrillic.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+:root {
+  --paper: #eef0f2;
+  --ink: #18202c;
+  --muted: #5b6574;
+  --rule: #c8cdd5;
+  --link: #2450d3;
+  --shadow: rgb(24 32 44 / 0.22);
+  --page: 74rem;
+  --measure: 42rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #161b22;
+    --ink: #e4e8ee;
+    --muted: #97a1b0;
+    --rule: #333c48;
+    --link: #8fadff;
+    --shadow: rgb(0 0 0 / 0.55);
+  }
+}
+
+/* Seasons: winter uses the base colors above; the season is set on <html> from the date */
+:root[data-season="spring"] { --paper: #f4eff1; --muted: #5f5a63; --rule: #d9cfd4; --link: #b0365f; }
+:root[data-season="summer"] { --paper: #edf2ec; --muted: #57655c; --rule: #c7d3c8; --link: #2c7240; }
+:root[data-season="autumn"] { --paper: #f3eeea; --muted: #665d57; --rule: #d8cfc7; --link: #a5401d; }
+@media (prefers-color-scheme: dark) {
+  :root[data-season="spring"] { --paper: #1c171b; --muted: #a89aa4; --rule: #3a3036; --link: #f29bb8; }
+  :root[data-season="summer"] { --paper: #141b17; --muted: #93a69a; --rule: #2d3a32; --link: #8fd49b; }
+  :root[data-season="autumn"] { --paper: #1c1815; --muted: #a99d93; --rule: #3b332c; --link: #f0a070; }
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1.0625rem/1.6 "Onest", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: clamp(3rem, 12vh, 8rem) clamp(1rem, 4vw, 3rem) 5rem;
+}
+
+h1, h2, h3, p, ul { margin: 0; }
+
+a {
+  color: var(--link);
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--link) 40%, transparent);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 0.15s ease;
+}
+a:hover { text-decoration-color: var(--link); text-decoration-thickness: 2px; }
+a:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Intro: the one loud element on the page */
+.intro h1 span { display: block; }
+@media (min-width: 40rem) {
+  .intro h1 span { display: inline; }
+}
+.intro h1 {
+  font-weight: 800;
+  font-size: clamp(3.25rem, 11vw, 9.5rem);
+  white-space: nowrap;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  margin-left: -0.05em;
+}
+.intro-bottom {
+  margin-top: 3rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+}
+.intro-text { flex: 1 1 24rem; }
+.intro-text p { max-width: var(--measure); }
+.intro .lede {
+  font-size: clamp(1.375rem, 2.4vw, 1.875rem);
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.intro-text p + p { margin-top: 1rem; color: var(--muted); }
+
+/* Seasonal particles over the whole page, drawn by season.js.
+   They fall in front of the scene but behind the text. */
+.season-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+.intro h1,
+.intro-text,
+.row {
+  position: relative;
+  z-index: 2;
+}
+
+/* Voxel snow monkey, drawn by monkey.js */
+.monkey3d {
+  position: relative;
+  z-index: 0;
+  width: clamp(16rem, 40vw, 34rem);
+  aspect-ratio: 1;
+  margin: -6rem -2rem -4rem 0;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+@media (max-width: 40rem) {
+  .monkey3d { margin: -1rem auto -2rem; }
+}
+/* A soft shadow on the page under the pool, so the scene sits on it */
+.monkey3d::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 18%;
+  right: 18%;
+  bottom: 9%;
+  height: 9%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--shadow), transparent);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.monkey3d.ready::before { opacity: 1; }
+.monkey3d:active { cursor: grabbing; }
+.monkey3d.ready { opacity: 1; }
+.monkey3d canvas { display: block; touch-action: pan-y; }
+
+.row {
+  margin-top: 6rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+.body > * + * { margin-top: 1rem; }
+.body > p, .facts { max-width: var(--measure); }
+.side { margin-bottom: 1rem; }
+
+@media (min-width: 56rem) {
+  .row {
+    display: grid;
+    grid-template-columns: 16rem 1fr;
+    column-gap: 3rem;
+  }
+  .side { margin-bottom: 0; }
+}
+
+h2 {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* hakobu */
+.feature h2 {
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.feature h2 a { color: inherit; text-decoration: none; }
+.feature h2 a:hover { text-decoration: underline; text-decoration-thickness: 2px; }
+
+.facts {
+  padding: 0;
+  list-style: none;
+}
+.facts li {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.facts li:first-child { border-top: 1px solid var(--rule); }
+
+/* Experience */
+.jobs article + article {
+  margin-top: 2.5rem;
+}
+.jobs article > * + * { margin-top: 0.75rem; }
+.jobs h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.jobs .when {
+  margin-top: 0.125rem;
+  color: var(--muted);
+}
+.jobs p, .jobs ul { max-width: var(--measure); }
+.jobs ul { padding-left: 1.1rem; }
+.jobs li + li { margin-top: 0.5rem; }
+.jobs li::marker { color: var(--muted); }
+
+.links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
+
+/* Text selection in the season's color */
+::selection { background: color-mix(in srgb, var(--link) 22%, transparent); }
+
+/* The monkey can be petted from the keyboard */
+.monkey3d:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: -3.5rem;
+  border-radius: 4.5rem;
+}
+.side .kind { margin-top: 0.25rem; color: var(--muted); }
+
+/* 404 */
+.lost h1 {
+  font-weight: 800;
+  font-size: clamp(5rem, 22vw, 14rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+}
+.lost p { margin-top: 1.5rem; font-size: 1.375rem; }
+
+/* Printed, the page is a plain one-column document */
+@media print {
+  :root, :root[data-season] { --paper: #fff; --ink: #000; --muted: #444; --rule: #bbb; --link: #000; }
+  .feature h2 { font-size: 18pt; }
+  .season-bg, .monkey3d { display: none !important; }
+  body { font-size: 11pt; }
+  main { max-width: none; padding: 0; }
+  .intro h1 { font-size: 32pt; white-space: normal; }
+  .intro-bottom { margin-top: 1rem; display: block; }
+  .row { margin-top: 1.5rem; padding-top: 0.75rem; break-inside: avoid; display: grid; grid-template-columns: 9rem 1fr; column-gap: 1.5rem; }
+  .contacts a::after { content: " (" attr(href) ")"; color: var(--muted); }
+  .contacts a[href^="mailto"]::after,
+  .contacts a[href$=".pdf"]::after { content: none; }
+}
+
+/* Line breaking: even lines in headings, no lone last word in paragraphs */
+h1, h2, h3, .lede { text-wrap: balance; }
+p, li { text-wrap: pretty; }
+.when { font-variant-numeric: tabular-nums; }
