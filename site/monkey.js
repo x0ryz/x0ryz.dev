@@ -12,7 +12,6 @@ const darkScheme = matchMedia("(prefers-color-scheme: dark)");
 const C = {
   face: 0xe0766a,
   faceDark: 0xc65e54,
-  muzzle: 0xeb8f82,
   nostril: 0x8f3e38,
   eye: 0x231a17,
   glint: 0xf4f1ec,
@@ -137,11 +136,12 @@ for (const s of [-1, 1]) {
   }
   put(ex, 18, FACE_Z - 1, C.glint);
 }
-// Muzzle, nostrils and mouth
-ellipsoid(0, 13.5, FACE_Z, 3.6, 2.8, 2.6, (x, y, z) => (z > FACE_Z ? C.muzzle : C.face));
-put(-1, 15, FACE_Z + 2, C.nostril);
-put(1, 15, FACE_Z + 2, C.nostril);
-for (let x = -2; x <= 2; x++) put(x, 12, FACE_Z + 2, C.faceDark);
+// A flat macaque face: a low muzzle in the face colour, small nostrils and a thin mouth.
+// A big pink snout read as a pig.
+ellipsoid(0, 13.5, FACE_Z, 3.2, 2.6, 1.4, C.face);
+put(-1, 15, FACE_Z + 1, C.nostril);
+put(1, 15, FACE_Z + 1, C.nostril);
+for (let x = -1; x <= 1; x++) put(x, 12, FACE_Z + 1, C.faceDark);
 // Ears attached to the side of the head, with fur filling in behind them
 for (const s of [-1, 1])
   for (let y = 17; y <= 21; y++)
