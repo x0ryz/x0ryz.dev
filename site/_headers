@@ -1,0 +1,6 @@
+# The pages.dev copy stays out of search; x0ryz.dev is the canonical address
+https://x0ryz-dev.pages.dev/*
+  X-Robots-Tag: noindex
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable

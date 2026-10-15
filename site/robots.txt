@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://x0ryz.dev/sitemap.xml
