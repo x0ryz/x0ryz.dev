@@ -265,7 +265,7 @@ h2 {
   position: relative;
   z-index: 0;
   height: 17rem;
-  margin-top: -4rem;
+  margin-top: -9rem;
   pointer-events: none;
 }
 .onsen:not(.ready) { display: none; }

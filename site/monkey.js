@@ -747,29 +747,6 @@ if (onsenBox) {
     }
     const boulder = (cx, cz, rx, top, rz) =>
       ellipsoid(Math.round(cx), LEVEL - 1, Math.round(cz), rx, top - LEVEL + 1, rz, () => pick(C.rock));
-    // Behind the pool, the valley: a wood of the season's trees along the shore, and far hills,
-    // paler with distance, snow-capped in winter
-    const LEAVES = S.canopy || { summer: [0x6d9a52, 0x5c8746, 0x7fae5e], winter: [0x4f6b5a, 0x45604f, 0x5a7564] }[SEASON];
-    for (let x = -long - 40; x <= long + 40; x += 5 + r() * 9) {
-      const tx = Math.round(x);
-      const tz = Math.round(shore(x) - 12 - r() * 10);
-      const size = 0.6 + r() * 0.7;
-      const tall = (5 + r() * 4) * size;
-      block(tx, tx + 1, LEVEL - 1, LEVEL + Math.round(tall * 0.45), tz, tz + 1, BARK);
-      ellipsoid(tx + 0.5, LEVEL + tall, tz + 0.5, (3 + r() * 2) * size + 1, (2.5 + r() * 1.5) * size + 0.5, (3 + r()) * size + 1, (x, y) =>
-        SEASON === "winter" && y > LEVEL + tall + 0.5 ? C.snow : r() < 0.12 ? undefined : pick(LEAVES),
-      );
-    }
-    for (const [k, c] of [...map]) if (c === undefined) map.delete(k);
-    const HILLS = [0xb7c0ca, 0xaeb8c3, 0xc0c8d1];
-    for (let x = -long - 60; x <= long + 60; x++) {
-      const crest = LEVEL + 6 + 3.5 * Math.sin(x * 0.035 + 1) + 2 * Math.sin(x * 0.09 + 4) + Math.sin(x * 0.21);
-      for (let z = -38; z <= -36; z++)
-        for (let y = LEVEL - 2; y <= crest; y++)
-          put(x, y, z, SEASON === "winter" && y > crest - 2 ? C.snow : pick(HILLS));
-      // The ground runs back to the foot of the hills
-      for (let z = Math.round(shore(x)) - 13; z > -36; z--) if (!map.has(key(x, LEVEL - 1, z))) put(x, LEVEL - 1, z, pick(GROUND));
-    }
     // Stones of much the same height, so the shore reads as one even line
     for (let x = -long - 30; x <= long + 30; x += 2.6 + r() * 2) {
       boulder(x, shore(x) - r(), 2.4 + r() * 1.6, LEVEL + 2.5 + r() * 1.5, 2 + r());
