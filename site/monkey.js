@@ -722,18 +722,18 @@ if (onsenBox) {
 
 
   // The pool: water all across the front, running out past the bottom of the page as if you
-  // stood in it, and a shore only at the back, curving gently away at both ends. Stones line
+  // stood in it, and a shore only at the back, nearly straight. Stones line
   // the shore and stony ground lies behind them, carrying the season (snow in winter, a
-  // scatter of petals, moss or leaves otherwise). The ends fade into the page (see
-  // .onsen canvas in style.css). It is rebuilt to the width of the window from the same seed,
-  // so nothing jumps when the window is resized.
+  // scatter of petals, moss or leaves otherwise). Water and shore run on past both sides of
+  // the page too. It is rebuilt to the width of the window from the same seed, so nothing
+  // jumps when the window is resized.
   const GROUND = { winter: [C.snow, 0xeef1f5, 0xe2e7ee] }[SEASON] || [0x9a9fa6, 0x8d9097, 0xa6abb1];
   function buildPool(long) {
     let seed = 7;
     const r = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
     const pick = (list) => list[Math.floor(r() * list.length)];
-    // Where the shore is, from left to right: furthest back in the middle
-    const shore = (x) => -DEEP * Math.sqrt(Math.max(0, 1 - (x / (long + 25)) ** 2)) - 2;
+    // Where the shore is, from left to right: a long, shallow curve, almost level
+    const shore = (x) => -DEEP - 2 + 2.5 * (x / (long + 30)) ** 2;
     const map = new Map();
     vox = map;
     for (let x = -long - 30; x <= long + 30; x++) {
@@ -747,9 +747,10 @@ if (onsenBox) {
     }
     const boulder = (cx, cz, rx, top, rz) =>
       ellipsoid(Math.round(cx), LEVEL - 1, Math.round(cz), rx, top - LEVEL + 1, rz, () => pick(C.rock));
+    // Stones of much the same height, so the shore reads as one even line
     for (let x = -long - 30; x <= long + 30; x += 2.6 + r() * 2) {
-      boulder(x, shore(x) - r() * 2, 2.4 + r() * 2, LEVEL + 2 + r() * 3.5, 2 + r() * 1.5);
-      if (r() < 0.35) boulder(x + 2, shore(x) - 5, 3 + r() * 2, LEVEL + 4.5 + r() * 4, 3);
+      boulder(x, shore(x) - r(), 2.4 + r() * 1.6, LEVEL + 2.5 + r() * 1.5, 2 + r());
+      if (r() < 0.15) boulder(x + 2, shore(x) - 5, 3 + r() * 1.5, LEVEL + 4 + r() * 2, 3);
     }
     // The season on some of the stones, sparser than at the top
     const tops = new Map();
@@ -839,7 +840,8 @@ if (onsenBox) {
   footSteam.forEach((s) => s.material.color.setHex(steamColor()));
 
   const footCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
-  footCam.position.set(14, 62, 90);
+  // Straight on, so the shore runs level across the page
+  footCam.position.set(0, 62, 90);
   footCam.lookAt(0, LEVEL + 13, 0);
   let span = 0; // half the width of the pool in view
   function fit() {

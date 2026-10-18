@@ -270,14 +270,7 @@ h2 {
 }
 .onsen:not(.ready) { display: none; }
 .onsen { overflow: hidden; }
-.onsen canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  /* The ends of the pool fade into the page; at the front the water runs off the page */
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-}
+.onsen canvas { display: block; width: 100%; height: 100%; }
 
 /* 404 */
 .lost h1 {
