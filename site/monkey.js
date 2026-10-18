@@ -804,12 +804,11 @@ if (onsenBox) {
   footScene.add(lanternPart, treePart, lanternPart2, treePart2);
 
   // Things around the spring, built from voxels like the rest: a wooden bucket and ladle,
-  // a ♨ sign, a bamboo spout pouring into the water, and something of the season
+  // a ♨ sign, and something of the season
   const WOOD = 0xa0784f;
   const WOOD_DARK = 0x7a5a3a;
   const BOARD = 0xd9c29a;
   const MARK = 0xc23a22;
-  const BAMBOO = [0x7fae5e, 0x5c8746];
   // Each stands on a flat rock at the water's edge, so the shore stones don't hide it
   const build = (make, slab = 4) => {
     const map = new Map();
@@ -852,35 +851,6 @@ if (onsenBox) {
     for (let x = -9; x <= 9; x++)
       for (let y = 5; y <= 18; y++) put(x, y, 0, x === -9 || x === 9 || y === 5 || y === 18 ? WOOD_DARK : BOARD);
     SIGN.forEach((row, r) => [...row].forEach((c, i) => c === "x" && put(i - 7, 17 - r, 1, MARK)));
-  });
-
-  // A long bamboo pipe (kakehi) on two crossed stick supports, its open end over the water
-  const SPOUT = { x: 14, y: 5, z: 5 }; // where the water leaves the pipe
-  const spout = build(() => {
-    const stick = (x, z) => {
-      limb([x - 1.5, 0, z], [x + 1, 6.5, z], 0.4, BARK);
-      limb([x + 1.5, 0, z], [x - 1, 6.5, z], 0.4, BARK);
-    };
-    stick(1, 0.5);
-    stick(8, 3);
-    const n = 28;
-    for (let k = 0; k <= n; k++) {
-      const t = k / n;
-      ellipsoid(-1 + t * (SPOUT.x + 1), 6.4 - t * 1.4, t * SPOUT.z, 0.8, 0.8, 0.8, k % 7 === 0 ? BAMBOO[1] : BAMBOO[0]);
-    }
-  }, 3);
-  const dropMat = new THREE.MeshLambertMaterial({ color: 0xd6ecf7, transparent: true, opacity: 0.85, depthWrite: false });
-  const drops = Array.from({ length: 8 }, (_, i) => {
-    const d = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.9, 0.6), dropMat);
-    d.userData.at = i / 8;
-    footScene.add(d);
-    return d;
-  });
-  const splash = [0, 0.75].map((delay) => {
-    const mat = new THREE.MeshBasicMaterial({ color: 0xf4fbff, transparent: true, opacity: 0, depthWrite: false });
-    const ring = new THREE.InstancedMesh(new THREE.BoxGeometry(0.7, 0.2, 0.7), mat, 20);
-    footScene.add(ring);
-    return { ring, mat, delay };
   });
 
   // Something of the season: a snowman, a heap of fallen leaves, a butterfly or a dragonfly
@@ -930,7 +900,7 @@ if (onsenBox) {
     flyer.userData.next = 0;
     footScene.add(flyer);
   }
-  footScene.add(bucket, sign, spout, seasonal);
+  footScene.add(bucket, sign, seasonal);
   darkScheme.addEventListener("change", syncLight);
   syncLight();
 
@@ -1042,10 +1012,9 @@ if (onsenBox) {
     onShore(treePart2, -0.33 * long, 9, T);
     // The new things on the shore; on a phone only the sign and the season's thing fit
     const ground = (part, x, back, lift = 3) => part.position.set(x, LEVEL + lift, shore(x) - back);
-    bucket.visible = spout.visible = wide;
+    bucket.visible = wide;
     ground(bucket, -0.45 * long, 0);
     ground(sign, wide ? 0.2 * long : 4, 6, 0);
-    ground(spout, 0.58 * long, 0);
     ground(seasonal, wide ? -0.24 * long : -4, 0);
     if (flyer) flyer.userData.home = new THREE.Vector3(wide ? 0.32 * long : -2, LEVEL + 8, 10);
     // Spread unevenly and at different distances from the shore; the fourth grown-up only on
@@ -1105,25 +1074,6 @@ if (onsenBox) {
       const x = (a * 2 - 1) * poolLong * 0.85;
       f.position.set(x, LEVEL - 0.2, u.z * 0.6 + 3);
       f.rotation.y = a * 20;
-    }
-    // Water pouring from the spout, rings spreading where it lands
-    const out = spout.position;
-    for (const d of drops) {
-      d.visible = spout.visible;
-      const p = reduceMotion ? d.userData.at : (ft * 1.6 + d.userData.at) % 1;
-      d.position.set(out.x + SPOUT.x + 0.8 + p * 0.5, out.y + SPOUT.y - p * (out.y + SPOUT.y - LEVEL + 0.6), out.z + SPOUT.z);
-    }
-    for (const { ring, mat, delay } of splash) {
-      ring.visible = spout.visible && !reduceMotion;
-      if (!ring.visible) continue;
-      const p = ((ft + delay) % 1.5) / 1.5;
-      const r = 0.8 + p * 4;
-      for (let i = 0; i < 20; i++) {
-        const a = (i / 20) * Math.PI * 2;
-        ring.setMatrixAt(i, m4.makeTranslation(out.x + SPOUT.x + 1.3 + Math.cos(a) * r, LEVEL - 0.3, out.z + SPOUT.z + Math.sin(a) * r * 0.8));
-      }
-      ring.instanceMatrix.needsUpdate = true;
-      mat.opacity = 0.7 * (1 - p);
     }
     // The butterfly or the dragonfly: wanders, flapping, or darts and hovers
     if (flyer && flyer.userData.home) {
