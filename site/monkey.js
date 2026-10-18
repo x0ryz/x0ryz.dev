@@ -10,18 +10,18 @@ const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const darkScheme = matchMedia("(prefers-color-scheme: dark)");
 
 const C = {
-  face: 0xd4806f,
-  faceDark: 0xb96a5d,
+  face: 0xc98576,
+  faceDark: 0xb0705f,
   nostril: 0x8f3e38,
   eye: 0x231a17,
   glint: 0xf4f1ec,
-  ear: 0xcd7a6c,
+  ear: 0xc07f70,
   snow: 0xffffff,
   rock: [0x6b717b, 0x7b818b, 0x5d636c, 0x868c95, 0x737984],
   stone: 0x8d9097,
   laptop: 0x3a4250,
   keys: 0x2b313c,
-  screen: 0x4cc0a8,
+  screen: 0x7fb5a9,
 };
 
 const SEASON = document.documentElement.dataset.season || "winter";
@@ -392,7 +392,7 @@ const lidPart = pivoted(voxelMesh(laptopLid), 0, HINGE.y, HINGE.z);
 lidPart.add(screenMesh);
 screenMesh.position.set(0, -HINGE.y, -HINGE.z);
 model.add(lidPart);
-const screenLight = new THREE.PointLight(0x5fe3cb, 0, 12, 1.5);
+const screenLight = new THREE.PointLight(0x9fd3c7, 0, 12, 1.5);
 screenLight.position.set(0, 9, 14);
 model.add(screenLight);
 let screenGlow = 0;
@@ -504,6 +504,9 @@ sun.shadow.bias = -0.0005;
 sun.shadow.normalBias = 0.03;
 scene.add(hemi, sun);
 
+const WATER_DAY = { winter: 0x8eaec4, spring: 0x9aaec3, summer: 0x8fb2bb, autumn: 0x98adbc }[SEASON];
+const WATER_NIGHT = { winter: 0x3d5f7c, spring: 0x45587a, summer: 0x3b5f6e, autumn: 0x465a72 }[SEASON];
+
 // Day in the light theme, night with a lit lantern and stars in the dark theme
 function applyTheme() {
   const night = darkScheme.matches;
@@ -512,11 +515,12 @@ function applyTheme() {
   hemi.intensity = night ? 0.9 : 1.6;
   sun.color.setHex(night ? 0xb8c8f0 : 0xffffff);
   sun.intensity = night ? 0.6 : 1.6;
-  waterMat.color.setHex(night ? 0x3b6f96 : 0x7fb3d5);
+  // Muted, and a touch of the season's colour, like the page's links
+  waterMat.color.setHex(night ? WATER_NIGHT : WATER_DAY);
   windowMat.color.setHex(night ? 0xffd27a : 0xcfc6b4);
   lanternLight.intensity = night ? 30 : 0;
-  screenOn.setHex(night ? 0x7af5dc : C.screen);
-  screenGlow = night ? 7 : 3;
+  screenOn.setHex(night ? 0x9fd6ca : C.screen);
+  screenGlow = night ? 5 : 2;
   stars.visible = night;
   for (const z of zs) z.userData.mat.color.setHex(night ? 0xc9d1dc : 0x5b6574);
 }
@@ -524,15 +528,16 @@ darkScheme.addEventListener("change", applyTheme);
 applyTheme();
 
 const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
-camera.position.set(20, 16, 28);
+// From the front, a little to the side and above: the face over the laptop, the tree beside
+camera.position.set(18, 26, 26);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 5.5, 0);
 controls.enableZoom = false;
 controls.enablePan = false;
 controls.enableDamping = true;
-controls.autoRotate = !reduceMotion;
-controls.autoRotateSpeed = 1.2;
+// The scene holds still, like the rest of the page; it turns only when dragged
+controls.autoRotate = false;
 controls.minPolarAngle = 0.4;
 controls.maxPolarAngle = 1.35;
 

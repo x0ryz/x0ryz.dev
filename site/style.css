@@ -27,7 +27,7 @@
   --muted: #5b6574;
   --rule: #c8cdd5;
   --link: #2450d3;
-  --shadow: rgb(24 32 44 / 0.22);
+  --shadow: rgb(24 32 44 / 0.12);
   --page: 74rem;
   --measure: 42rem;
 }
@@ -39,7 +39,7 @@
     --muted: #97a1b0;
     --rule: #333c48;
     --link: #8fadff;
-    --shadow: rgb(0 0 0 / 0.55);
+    --shadow: rgb(0 0 0 / 0.35);
   }
 }
 
