@@ -905,7 +905,8 @@ if (onsenBox) {
   // Where the water comes from: a little waterfall pouring in one sheet over a rock ledge at
   // the back into the pool, foaming where it lands
   const FALL_WATER = 0x8cc4e6;
-  const LEDGES = [{ top: 6, z: 0 }];
+  // Lower than the shore stones: it pours out of a gap among them, in front of them
+  const LEDGES = [{ top: 2.5, z: 0 }];
   const fall = build(() => {
     const stone = () => C.rock[Math.floor(rand() * C.rock.length)];
     const { top, z } = LEDGES[0];
@@ -913,11 +914,11 @@ if (onsenBox) {
     block(-4, 4, -3, top + 1.5, z - 9, z - 6, stone);
     // The stream running over the ledge to its lip
     block(-3, 3, top + 1, top + 1, z - 8, z, FALL_WATER);
-    ellipsoid(-7, 2, -3.5, 2.8, 6, 4, stone);
-    ellipsoid(7, 1.5, -3, 2.8, 5, 4, stone);
+    ellipsoid(-6, 1, -2.5, 2.5, 3.5, 3.5, stone);
+    ellipsoid(6, 0.5, -2, 2.5, 3, 3.5, stone);
     if (SEASON === "winter") {
-      ellipsoid(-7, 7.5, -3.5, 2.4, 0.8, 3, C.snow);
-      ellipsoid(7, 6, -3, 2.4, 0.8, 3, C.snow);
+      ellipsoid(-6, 4.5, -2.5, 2, 0.6, 2.5, C.snow);
+      ellipsoid(6, 3.5, -2, 2, 0.6, 2.5, C.snow);
     }
   }, 0);
   // Falling water: columns of cubes running down each step, lighter and darker in turn
@@ -1060,7 +1061,7 @@ if (onsenBox) {
     ground(sign, wide ? 0.2 * long : 4, 6, 0);
     ground(seasonal, wide ? -0.24 * long : -4, 0);
     // The waterfall right of the sign, in the gap between the monkeys; on a phone at the right
-    ground(fall, wide ? 0.4 * long : 0.62 * long, -3, -1);
+    ground(fall, wide ? 0.4 * long : 0.62 * long, -4, -1);
     if (flyer) flyer.userData.home = new THREE.Vector3(wide ? 0.32 * long : -2, LEVEL + 8, 10);
     // Spread unevenly and at different distances from the shore; the fourth grown-up only on
     // very wide screens. On a phone, the one looking about and the little one.
