@@ -49,47 +49,58 @@ console.log(
     pick: Math.random(),
   }));
 
-  let last = performance.now();
+  let last = 0;
+  let running = false;
   function frame(now) {
     const dt = Math.min((now - last) / 1000, 0.1);
     last = now;
     const colors = dark.matches ? LOOK.dark : LOOK.light;
     ctx.clearRect(0, 0, w, h);
-    if (colors.length) {
-      const t = now / 1000;
-      for (const b of bits) {
-        const s = LOOK.size;
-        let x;
-        let y;
-        let alpha = 0.8;
-        if (LOOK.fireflies) {
-          // Wander around their spot and pulse
-          x = b.x + Math.sin(t * 0.4 + b.phase) * 40;
-          y = b.y + Math.sin(t * 0.3 + b.phase * 2) * 30;
-          alpha = 0.2 + 0.8 * Math.max(0, Math.sin(t * 1.8 + b.phase));
-          ctx.shadowColor = colors[0];
-          ctx.shadowBlur = 10;
-        } else {
-          b.y += b.speed * dt;
-          if (b.y > h + 10) {
-            b.y = -10;
-            b.x = Math.random() * w;
-          }
-          x = b.x + Math.sin(t * 0.6 + b.phase) * 30;
-          y = b.y;
-        }
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = colors[Math.floor(b.pick * colors.length)];
-        ctx.save();
-        ctx.translate(x, y);
-        if (LOOK.spin) ctx.rotate(t * 0.8 + b.phase);
-        ctx.fillRect(-s / 2, -s / 2, s, LOOK.spin ? s * 0.6 : s);
-        ctx.restore();
-      }
-      ctx.shadowBlur = 0;
-      ctx.globalAlpha = 1;
+    // Nothing to draw (fireflies on a summer day): stop until the theme turns dark
+    if (!colors.length) {
+      running = false;
+      return;
     }
+    const t = now / 1000;
+    for (const b of bits) {
+      const s = LOOK.size;
+      let x;
+      let y;
+      let alpha = 0.8;
+      if (LOOK.fireflies) {
+        // Wander around their spot and pulse
+        x = b.x + Math.sin(t * 0.4 + b.phase) * 40;
+        y = b.y + Math.sin(t * 0.3 + b.phase * 2) * 30;
+        alpha = 0.2 + 0.8 * Math.max(0, Math.sin(t * 1.8 + b.phase));
+        ctx.shadowColor = colors[0];
+        ctx.shadowBlur = 10;
+      } else {
+        b.y += b.speed * dt;
+        if (b.y > h + 10) {
+          b.y = -10;
+          b.x = Math.random() * w;
+        }
+        x = b.x + Math.sin(t * 0.6 + b.phase) * 30;
+        y = b.y;
+      }
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = colors[Math.floor(b.pick * colors.length)];
+      ctx.save();
+      ctx.translate(x, y);
+      if (LOOK.spin) ctx.rotate(t * 0.8 + b.phase);
+      ctx.fillRect(-s / 2, -s / 2, s, LOOK.spin ? s * 0.6 : s);
+      ctx.restore();
+    }
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
     requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+  function start() {
+    if (running) return;
+    running = true;
+    last = performance.now();
+    requestAnimationFrame(frame);
+  }
+  dark.addEventListener("change", start);
+  start();
 })();

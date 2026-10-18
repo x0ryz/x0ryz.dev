@@ -10,12 +10,12 @@ const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const darkScheme = matchMedia("(prefers-color-scheme: dark)");
 
 const C = {
-  face: 0xe0766a,
-  faceDark: 0xc65e54,
+  face: 0xd4806f,
+  faceDark: 0xb96a5d,
   nostril: 0x8f3e38,
   eye: 0x231a17,
   glint: 0xf4f1ec,
-  ear: 0xd96f64,
+  ear: 0xcd7a6c,
   snow: 0xffffff,
   rock: [0x6b717b, 0x7b818b, 0x5d636c, 0x868c95, 0x737984],
   stone: 0x8d9097,
