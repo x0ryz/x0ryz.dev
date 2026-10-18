@@ -802,6 +802,114 @@ if (onsenBox) {
   const lanternPart2 = lanternPart.clone();
   const treePart2 = new THREE.Mesh(treePart.geometry, treePart.material);
   footScene.add(lanternPart, treePart, lanternPart2, treePart2);
+
+  // Things around the spring, built from voxels like the rest: a wooden bucket and ladle,
+  // a ♨ sign, a bamboo spout pouring into the water, and something of the season
+  const WOOD = 0xa0784f;
+  const WOOD_DARK = 0x7a5a3a;
+  const BOARD = 0xd9c29a;
+  const MARK = 0xc23a22;
+  const BAMBOO = [0x7fae5e, 0x5c8746];
+  // Each stands on a flat rock at the water's edge, so the shore stones don't hide it
+  const build = (make, slab = 4) => {
+    const map = new Map();
+    vox = map;
+    if (slab) ellipsoid(0, -2, 0, slab, 2, slab - 0.5, () => C.rock[Math.floor(rand() * C.rock.length)]);
+    make();
+    vox = monkey;
+    return voxelMesh(map);
+  };
+
+  const bucket = build(() => {
+    for (let y = 0; y <= 3; y++)
+      for (let x = -3; x <= 3; x++)
+        for (let z = -3; z <= 3; z++) {
+          const d = Math.hypot(x, z);
+          if (d <= 2.6 && (y === 0 || d >= 1.6)) put(x, y, z, y === 1 || y === 3 ? WOOD_DARK : WOOD);
+        }
+    // The ladle lies beside it
+    ellipsoid(5, 0, 2, 1.2, 0.8, 1.2, WOOD);
+    block(6, 10, 0, 0, 2, 2, WOOD_DARK);
+  });
+
+  // ♨ on a board between two posts
+  const SIGN = ["..x.x.x..", ".x.x.x...", "..x.x.x..", ".........", "x.......x", ".x.....x.", "..xxxxx.."];
+  const sign = build(() => {
+    block(-5, -5, 0, 6, 0, 0, WOOD_DARK);
+    block(5, 5, 0, 6, 0, 0, WOOD_DARK);
+    for (let x = -5; x <= 5; x++)
+      for (let y = 6; y <= 14; y++) put(x, y, 0, x === -5 || x === 5 || y === 6 || y === 14 ? WOOD_DARK : BOARD);
+    SIGN.forEach((row, r) => [...row].forEach((c, i) => c === "x" && put(i - 4, 13 - r, 1, MARK)));
+  });
+
+  // A bamboo post with a pipe reaching out over the water
+  const SPOUT = { y: 6, z: 8 }; // where the water leaves the pipe
+  const spout = build(() => {
+    for (let y = 0; y <= 8; y++) block(0, 1, y, y, 0, 1, y % 3 === 0 ? BAMBOO[1] : BAMBOO[0]);
+    for (let z = 0; z <= SPOUT.z; z++) block(0, 1, 7 - Math.round(z / 8), 7 - Math.round(z / 8), z, z, z % 4 === 0 ? BAMBOO[1] : BAMBOO[0]);
+  }, 3);
+  const dropMat = new THREE.MeshLambertMaterial({ color: 0xd6ecf7, transparent: true, opacity: 0.85, depthWrite: false });
+  const drops = Array.from({ length: 8 }, (_, i) => {
+    const d = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.9, 0.6), dropMat);
+    d.userData.at = i / 8;
+    footScene.add(d);
+    return d;
+  });
+  const splash = [0, 0.75].map((delay) => {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xf4fbff, transparent: true, opacity: 0, depthWrite: false });
+    const ring = new THREE.InstancedMesh(new THREE.BoxGeometry(0.7, 0.2, 0.7), mat, 20);
+    footScene.add(ring);
+    return { ring, mat, delay };
+  });
+
+  // Something of the season: a snowman, a heap of fallen leaves, a butterfly or a dragonfly
+  const seasonal = new THREE.Group();
+  let flyer = null;
+  if (SEASON === "winter")
+    seasonal.add(
+      build(() => {
+        ellipsoid(0, 2, 0, 2.6, 2.4, 2.6, C.snow);
+        ellipsoid(0, 5.6, 0, 1.8, 1.7, 1.8, C.snow);
+        put(-1, 6, 2, C.eye);
+        put(1, 6, 2, C.eye);
+        put(0, 5, 2, 0xe0782c);
+        put(0, 5, 3, 0xe0782c);
+        for (const sx of [-1, 1]) for (let k = 0; k < 3; k++) put(sx * (3 + k), 3 + k, 0, BARK);
+      }),
+    );
+  else if (SEASON === "autumn")
+    seasonal.add(build(() => ellipsoid(0, 0, 0, 4, 2, 3, () => S.canopy[Math.floor(rand() * S.canopy.length)])));
+  else {
+    // A butterfly in spring, a dragonfly in summer, flitting about over the water
+    const spring = SEASON === "spring";
+    flyer = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 0.4, spring ? 1.4 : 3.2),
+      new THREE.MeshLambertMaterial({ color: spring ? 0x5b4636 : 0x2f8a96 }),
+    );
+    flyer.add(body);
+    const wingMat = new THREE.MeshLambertMaterial({
+      color: spring ? 0xf9cfdb : 0xe2f3f6,
+      transparent: !spring,
+      opacity: spring ? 1 : 0.75,
+    });
+    flyer.userData.wings = (spring ? [[-1, 0], [1, 0]] : [[-1, -0.5], [1, -0.5], [-1, 0.6], [1, 0.6]]).map(([side, z]) => {
+      const pivot = new THREE.Group();
+      const wing = new THREE.Mesh(new THREE.BoxGeometry(spring ? 1.6 : 2.4, 0.08, spring ? 1.4 : 0.6), wingMat);
+      wing.position.x = side * (spring ? 0.9 : 1.3);
+      pivot.position.z = z;
+      pivot.userData.side = side;
+      pivot.add(wing);
+      flyer.add(pivot);
+      return pivot;
+    });
+    flyer.userData.spring = spring;
+    flyer.scale.setScalar(1.8);
+    flyer.userData.to = new THREE.Vector3();
+    flyer.userData.next = 0;
+    footScene.add(flyer);
+  }
+  footScene.add(bucket, sign, spout, seasonal);
   darkScheme.addEventListener("change", syncLight);
   syncLight();
 
@@ -911,6 +1019,14 @@ if (onsenBox) {
     lanternPart2.visible = treePart2.visible = roomy;
     onShore(lanternPart2, 0.3 * long, 7, L);
     onShore(treePart2, -0.33 * long, 9, T);
+    // The new things on the shore; on a phone only the sign and the season's thing fit
+    const ground = (part, x, back, lift = 3) => part.position.set(x, LEVEL + lift, shore(x) - back);
+    bucket.visible = spout.visible = wide;
+    ground(bucket, -0.45 * long, 0);
+    ground(sign, wide ? 0.2 * long : 4, 6, 0);
+    ground(spout, 0.64 * long, 0);
+    ground(seasonal, wide ? -0.24 * long : -4, 0);
+    if (flyer) flyer.userData.home = new THREE.Vector3(wide ? 0.32 * long : -2, LEVEL + 8, 10);
     // Spread unevenly and at different distances from the shore; the fourth grown-up only on
     // very wide screens. On a phone, the one looking about and the little one.
     for (const m of soakers) m.g.visible = false;
@@ -968,6 +1084,40 @@ if (onsenBox) {
       const x = (a * 2 - 1) * poolLong * 0.85;
       f.position.set(x, LEVEL - 0.2, u.z * 0.6 + 3);
       f.rotation.y = a * 20;
+    }
+    // Water pouring from the spout, rings spreading where it lands
+    const out = spout.position;
+    for (const d of drops) {
+      d.visible = spout.visible;
+      const p = reduceMotion ? d.userData.at : (ft * 1.6 + d.userData.at) % 1;
+      d.position.set(out.x + 0.5, out.y + SPOUT.y - p * (out.y + SPOUT.y - LEVEL + 0.6), out.z + SPOUT.z + 0.5 + p * 0.6);
+    }
+    for (const { ring, mat, delay } of splash) {
+      ring.visible = spout.visible && !reduceMotion;
+      if (!ring.visible) continue;
+      const p = ((ft + delay) % 1.5) / 1.5;
+      const r = 0.8 + p * 4;
+      for (let i = 0; i < 20; i++) {
+        const a = (i / 20) * Math.PI * 2;
+        ring.setMatrixAt(i, m4.makeTranslation(out.x + Math.cos(a) * r, LEVEL - 0.3, out.z + SPOUT.z + 1.1 + Math.sin(a) * r * 0.8));
+      }
+      ring.instanceMatrix.needsUpdate = true;
+      mat.opacity = 0.7 * (1 - p);
+    }
+    // The butterfly or the dragonfly: wanders, flapping, or darts and hovers
+    if (flyer && flyer.userData.home) {
+      const u = flyer.userData;
+      if (ft > u.next) {
+        u.to.copy(u.home).add(new THREE.Vector3((Math.random() - 0.5) * 30, Math.random() * 6, (Math.random() - 0.5) * 8));
+        u.next = ft + (u.spring ? 1.5 : 2.5) + Math.random() * 2;
+      }
+      if (reduceMotion) flyer.position.copy(u.home);
+      else flyer.position.lerp(u.to, Math.min(1, dt * (u.spring ? 1.2 : 4)));
+      if (u.spring && !reduceMotion) flyer.position.y += Math.sin(ft * 7) * 0.08;
+      const heading = Math.atan2(u.to.x - flyer.position.x, u.to.z - flyer.position.z);
+      flyer.rotation.y += (heading - flyer.rotation.y) * Math.min(1, dt * 4);
+      const flap = reduceMotion ? 0.3 : Math.sin(ft * (u.spring ? 12 : 40)) * (u.spring ? 0.9 : 0.4);
+      for (const w of u.wings) w.rotation.z = w.userData.side * flap;
     }
     foot.render(footScene, footCam);
   }
