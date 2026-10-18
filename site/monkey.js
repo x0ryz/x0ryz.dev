@@ -904,9 +904,8 @@ if (onsenBox) {
   footScene.add(bucket, sign, seasonal);
 
   // Where the water comes from: a low waterfall. A stream runs out between two boulders,
-  // over a stone lip lower than the shore, and drops in one sheet into the pool, which
-  // answers it: the water stirs pale where it lands and rings spread out across the pool.
-  // It stands in front of the shore stones.
+  // over a stone lip lower than the shore, and drops in one clear sheet into the pool; spray
+  // jumps and foam churns where it lands. It stands in front of the shore stones.
   const FALL_WATER = 0x8cc4e6;
   const LIP = 3; // the top of the stream, from the ground
   const fall = build(() => {
@@ -927,26 +926,30 @@ if (onsenBox) {
   );
   const streakMat = new THREE.MeshLambertMaterial({ color: 0xeef7fc, transparent: true, opacity: 0.95, depthWrite: false });
   const fallDrops = [];
-  for (let x = -2.5; x <= 2.5; x += 2.5)
-    for (let k = 0; k < 2; k++) {
-      const d = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.4, 0.35), streakMat);
-      d.userData = { x, at: k / 2 + Math.random() * 0.2, speed: 0.9 + Math.random() * 0.3 };
+  for (let x = -3; x <= 3; x++)
+    for (let k = 0; k < 4; k++) {
+      const d = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.3, 0.35), streakMat);
+      d.userData = { x: x + (Math.random() - 0.5) * 0.4, at: k / 4 + Math.random() * 0.15, speed: 1 + Math.random() * 0.4 };
       footScene.add(d);
       fallDrops.push(d);
     }
-  // The pool's answer: a pale stir where the sheet lands, and rings spreading out from it
-  const stir = new THREE.Mesh(
-    new THREE.BoxGeometry(7.5, 0.15, 2.4),
-    new THREE.MeshBasicMaterial({ color: 0xf4fbff, transparent: true, opacity: 0.5, depthWrite: false }),
-  );
-  const RING = 44;
-  const rings = [0, 1 / 3, 2 / 3].map((delay) => {
-    const mat = new THREE.MeshBasicMaterial({ color: 0xf4fbff, transparent: true, opacity: 0, depthWrite: false });
-    const ring = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.15, 0.9), mat, RING);
-    footScene.add(ring);
-    return { ring, mat, delay };
+  // Spray hopping up where the sheet lands, and foam churning on the water there
+  const whiteMat = new THREE.MeshLambertMaterial({ color: 0xf6fbfe, transparent: true, opacity: 0.9, depthWrite: false });
+  const spray = Array.from({ length: 12 }, () => {
+    const d = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), whiteMat);
+    d.userData = { p: Math.random() };
+    footScene.add(d);
+    return d;
   });
-  footScene.add(stir);
+  const hop = (d) =>
+    Object.assign(d.userData, { x: (Math.random() - 0.5) * 7, z: 1 + Math.random() * 1.5, h: 0.8 + Math.random(), out: (Math.random() - 0.5) * 2, speed: 1.1 + Math.random() * 0.8 });
+  spray.forEach(hop);
+  const foam = Array.from({ length: 14 }, () => {
+    const d = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 0.9), whiteMat);
+    d.userData = { x: (Math.random() - 0.5) * 8.5, z: 1 + Math.random() * 2.5, phase: Math.random() * 6 };
+    footScene.add(d);
+    return d;
+  });
   footScene.add(curtain);
   footScene.add(fall);
   darkScheme.addEventListener("change", syncLight);
@@ -1128,7 +1131,7 @@ if (onsenBox) {
       f.position.set(x, LEVEL - 0.2, u.z * 0.6 + 3);
       f.rotation.y = a * 20;
     }
-    // The waterfall: streaks running down the sheet
+    // The waterfall: streaks running down the sheet, spray hopping, foam churning
     const at = fall.position;
     const surface = 0.6; // the pool's surface, from the ground
     curtain.position.set(at.x, at.y + (LIP + surface) / 2, at.z + 0.7);
@@ -1137,22 +1140,22 @@ if (onsenBox) {
       const p = reduceMotion ? u.at % 1 : (ft * u.speed + u.at) % 1;
       d.position.set(at.x + u.x, at.y + LIP - p * (LIP - surface), at.z + 0.75);
     }
-    // The stir pulses; the rings grow from the foot of the sheet out across the water, wider
-    // than deep, around the front and sides, and fade as they go
-    const foot0 = { x: at.x, z: at.z + 1.6 };
-    stir.position.set(foot0.x, LEVEL - 0.35, foot0.z);
-    stir.material.opacity = reduceMotion ? 0.45 : 0.4 + 0.15 * Math.sin(ft * 9);
-    for (const { ring, mat, delay } of rings) {
-      ring.visible = !reduceMotion;
-      if (!ring.visible) continue;
-      const p = (ft / 3.6 + delay) % 1;
-      const r = 3 + p * 16;
-      for (let i = 0; i < RING; i++) {
-        const a = -0.15 * Math.PI + (i / (RING - 1)) * 1.3 * Math.PI;
-        ring.setMatrixAt(i, m4.makeTranslation(foot0.x + Math.cos(a) * r * 1.35, LEVEL - 0.35, foot0.z + Math.sin(a) * r * 0.7));
+    for (const d of spray) {
+      const u = d.userData;
+      d.visible = !reduceMotion;
+      if (reduceMotion) continue;
+      u.p += dt * u.speed;
+      if (u.p >= 1) {
+        u.p -= 1;
+        hop(d);
       }
-      ring.instanceMatrix.needsUpdate = true;
-      mat.opacity = 0.8 * (1 - p) ** 1.5;
+      d.position.set(at.x + u.x + u.out * u.p, at.y + surface + u.h * Math.sin(u.p * Math.PI), at.z + u.z);
+    }
+    for (const d of foam) {
+      const u = d.userData;
+      const wobble = reduceMotion ? 0 : Math.sin(ft * 5 + u.phase);
+      d.position.set(at.x + u.x + wobble * 0.15, at.y + surface + 0.1, at.z + u.z);
+      d.scale.set(1 + wobble * 0.25, 1, 1 - wobble * 0.25);
     }
     // The butterfly or the dragonfly: wanders, flapping, or darts and hovers
     if (flyer && flyer.userData.home) {
