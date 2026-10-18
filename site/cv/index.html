@@ -99,13 +99,14 @@
       </div>
       <div class="body jobs">
         <article>
-          <h3><a href="https://github.com/hakobudev/hakobu">hakobu</a> — self-hosted deployment tool (Go, open source)</h3>
+          <h3><a href="https://github.com/hakobudev/hakobu">hakobu</a> — self-hosted deployment tool (Go, open source, MIT)</h3>
           <p class="when">2026 – present</p>
           <ul>
-            <li>Self-hosted PaaS that deploys apps from GitHub repos to your own server on push to main — a lightweight alternative to paid platforms. Shipped as a single Go binary with SQLite state and a one-command installer.</li>
-            <li>Zero-downtime blue/green deployments behind a built-in proxy with atomic traffic switching; automatic stack detection (Railpack or Dockerfile).</li>
-            <li>Built-in PostgreSQL provisioning with scheduled backups to S3/R2, automatic Let's Encrypt HTTPS for per-project domains, optional Tailscale / Cloudflare Tunnel access.</li>
-            <li>Sentry-compatible error and log ingestion endpoint, so deployed apps need only a SENTRY_DSN.</li>
+            <li>Deploys apps from GitHub to servers you own: on a push to the default branch it builds the new version and swaps it in with no downtime, behind a Cloudflare Tunnel, so the server needs no open ports. Site and docs: <a href="https://hakobu.dev">hakobu.dev</a>.</li>
+            <li>Blue/green deploys with rollback, including the database.</li>
+            <li>Postgres, Valkey and R2 storage provisioned per project; encrypted backups that are test-restored after every upload.</li>
+            <li>Sentry-compatible errors, logs and traces kept on your own server.</li>
+            <li>Ships as one binary with SQLite state, runs apps in rootless Docker, and publishes signed releases.</li>
           </ul>
         </article>
       </div>

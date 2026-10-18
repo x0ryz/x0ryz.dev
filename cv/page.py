@@ -1,5 +1,5 @@
 # /// script
-# dependencies = ["pyyaml"]
+# dependencies = ["pyyaml>=6,<7"]
 # ///
 """Writes site/cv/index.html, the CV as a page in the site's style, from resume_en.yaml.
 

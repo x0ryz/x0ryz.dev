@@ -60,14 +60,15 @@ cv:
           - Integrated third-party SMS verification APIs to fully automate OTP handling.
 
     Projects:
-      - name: "[hakobu](https://github.com/hakobudev/hakobu) — self-hosted deployment tool (Go, open source)"
+      - name: "[hakobu](https://github.com/hakobudev/hakobu) — self-hosted deployment tool (Go, open source, MIT)"
         start_date: 2026
         end_date: present
         highlights:
-          - Self-hosted PaaS that deploys apps from GitHub repos to your own server on push to main — a lightweight alternative to paid platforms. Shipped as a single Go binary with SQLite state and a one-command installer.
-          - Zero-downtime blue/green deployments behind a built-in proxy with atomic traffic switching; automatic stack detection (Railpack or Dockerfile).
-          - Built-in PostgreSQL provisioning with scheduled backups to S3/R2, automatic Let's Encrypt HTTPS for per-project domains, optional Tailscale / Cloudflare Tunnel access.
-          - Sentry-compatible error and log ingestion endpoint, so deployed apps need only a SENTRY_DSN.
+          - "Deploys apps from GitHub to servers you own: on a push to the default branch it builds the new version and swaps it in with no downtime, behind a Cloudflare Tunnel, so the server needs no open ports. Site and docs: [hakobu.dev](https://hakobu.dev)."
+          - Blue/green deploys with rollback, including the database.
+          - Postgres, Valkey and R2 storage provisioned per project; encrypted backups that are test-restored after every upload.
+          - Sentry-compatible errors, logs and traces kept on your own server.
+          - Ships as one binary with SQLite state, runs apps in rootless Docker, and publishes signed releases.
 
     Education:
       - institution: Lutsk National Technical University (LNTU)

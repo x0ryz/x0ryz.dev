@@ -42,7 +42,7 @@ npm run build
 ./cv/build.sh
 ```
 
-It needs [uv](https://docs.astral.sh/uv/). Commit the PDF and the page with the YAML.
+It needs [uv](https://docs.astral.sh/uv/); RenderCV is pinned in the script, so a new release can't change the PDF unasked. Commit the PDF and the page with the YAML.
 
 ## Deploy
 
