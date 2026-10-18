@@ -1060,9 +1060,11 @@ if (onsenBox) {
     const roomy = long > 105;
     treePart2.visible = roomy;
     onShore(treePart2, -0.33 * long, 9, T);
-    // The new things on the shore; on a phone only the sign and the season's thing fit
+    // The things on the shore. A phone keeps only the monkeys, the waterfall and the lantern:
+    // anything more crowds its narrow strip
     const ground = (part, x, back, lift = 3) => part.position.set(x, LEVEL + lift, shore(x) - back);
-    bucket.visible = wide;
+    bucket.visible = sign.visible = seasonal.visible = treePart.visible = wide;
+    if (flyer) flyer.visible = wide;
     ground(bucket, -0.45 * long, 0);
     ground(sign, wide ? 0.2 * long : 4, 6, 0);
     ground(seasonal, wide ? -0.24 * long : -4, 0);
