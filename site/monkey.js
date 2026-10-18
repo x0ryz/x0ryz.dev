@@ -832,21 +832,42 @@ if (onsenBox) {
     block(6, 10, 0, 0, 2, 2, WOOD_DARK);
   });
 
-  // ♨ on a board between two posts
-  const SIGN = ["..x.x.x..", ".x.x.x...", "..x.x.x..", ".........", "x.......x", ".x.....x.", "..xxxxx.."];
+  // ♨ on a board between two posts: three wavy wisps of steam rising out of a bowl
+  const SIGN = [
+    "...x...x...x...",
+    "..x...x...x....",
+    "...x...x...x...",
+    "....x...x...x..",
+    "...x...x...x...",
+    "..x...x...x....",
+    "...............",
+    "xx...........xx",
+    ".x...........x.",
+    ".xx.........xx.",
+    "..xxxxxxxxxxx..",
+  ];
   const sign = build(() => {
-    block(-5, -5, 0, 6, 0, 0, WOOD_DARK);
-    block(5, 5, 0, 6, 0, 0, WOOD_DARK);
-    for (let x = -5; x <= 5; x++)
-      for (let y = 6; y <= 14; y++) put(x, y, 0, x === -5 || x === 5 || y === 6 || y === 14 ? WOOD_DARK : BOARD);
-    SIGN.forEach((row, r) => [...row].forEach((c, i) => c === "x" && put(i - 4, 13 - r, 1, MARK)));
+    block(-8, -8, 0, 5, 0, 0, WOOD_DARK);
+    block(8, 8, 0, 5, 0, 0, WOOD_DARK);
+    for (let x = -9; x <= 9; x++)
+      for (let y = 5; y <= 18; y++) put(x, y, 0, x === -9 || x === 9 || y === 5 || y === 18 ? WOOD_DARK : BOARD);
+    SIGN.forEach((row, r) => [...row].forEach((c, i) => c === "x" && put(i - 7, 17 - r, 1, MARK)));
   });
 
-  // A bamboo post with a pipe reaching out over the water
-  const SPOUT = { y: 6, z: 8 }; // where the water leaves the pipe
+  // A long bamboo pipe (kakehi) on two crossed stick supports, its open end over the water
+  const SPOUT = { x: 14, y: 5, z: 5 }; // where the water leaves the pipe
   const spout = build(() => {
-    for (let y = 0; y <= 8; y++) block(0, 1, y, y, 0, 1, y % 3 === 0 ? BAMBOO[1] : BAMBOO[0]);
-    for (let z = 0; z <= SPOUT.z; z++) block(0, 1, 7 - Math.round(z / 8), 7 - Math.round(z / 8), z, z, z % 4 === 0 ? BAMBOO[1] : BAMBOO[0]);
+    const stick = (x, z) => {
+      limb([x - 1.5, 0, z], [x + 1, 6.5, z], 0.4, BARK);
+      limb([x + 1.5, 0, z], [x - 1, 6.5, z], 0.4, BARK);
+    };
+    stick(1, 0.5);
+    stick(8, 3);
+    const n = 28;
+    for (let k = 0; k <= n; k++) {
+      const t = k / n;
+      ellipsoid(-1 + t * (SPOUT.x + 1), 6.4 - t * 1.4, t * SPOUT.z, 0.8, 0.8, 0.8, k % 7 === 0 ? BAMBOO[1] : BAMBOO[0]);
+    }
   }, 3);
   const dropMat = new THREE.MeshLambertMaterial({ color: 0xd6ecf7, transparent: true, opacity: 0.85, depthWrite: false });
   const drops = Array.from({ length: 8 }, (_, i) => {
@@ -1024,7 +1045,7 @@ if (onsenBox) {
     bucket.visible = spout.visible = wide;
     ground(bucket, -0.45 * long, 0);
     ground(sign, wide ? 0.2 * long : 4, 6, 0);
-    ground(spout, 0.64 * long, 0);
+    ground(spout, 0.58 * long, 0);
     ground(seasonal, wide ? -0.24 * long : -4, 0);
     if (flyer) flyer.userData.home = new THREE.Vector3(wide ? 0.32 * long : -2, LEVEL + 8, 10);
     // Spread unevenly and at different distances from the shore; the fourth grown-up only on
@@ -1090,7 +1111,7 @@ if (onsenBox) {
     for (const d of drops) {
       d.visible = spout.visible;
       const p = reduceMotion ? d.userData.at : (ft * 1.6 + d.userData.at) % 1;
-      d.position.set(out.x + 0.5, out.y + SPOUT.y - p * (out.y + SPOUT.y - LEVEL + 0.6), out.z + SPOUT.z + 0.5 + p * 0.6);
+      d.position.set(out.x + SPOUT.x + 0.8 + p * 0.5, out.y + SPOUT.y - p * (out.y + SPOUT.y - LEVEL + 0.6), out.z + SPOUT.z);
     }
     for (const { ring, mat, delay } of splash) {
       ring.visible = spout.visible && !reduceMotion;
@@ -1099,7 +1120,7 @@ if (onsenBox) {
       const r = 0.8 + p * 4;
       for (let i = 0; i < 20; i++) {
         const a = (i / 20) * Math.PI * 2;
-        ring.setMatrixAt(i, m4.makeTranslation(out.x + Math.cos(a) * r, LEVEL - 0.3, out.z + SPOUT.z + 1.1 + Math.sin(a) * r * 0.8));
+        ring.setMatrixAt(i, m4.makeTranslation(out.x + SPOUT.x + 1.3 + Math.cos(a) * r, LEVEL - 0.3, out.z + SPOUT.z + Math.sin(a) * r * 0.8));
       }
       ring.instanceMatrix.needsUpdate = true;
       mat.opacity = 0.7 * (1 - p);
