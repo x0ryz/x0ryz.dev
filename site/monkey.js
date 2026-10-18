@@ -722,7 +722,7 @@ if (onsenBox) {
 
 
   // The pool: water all across the front, running out past the bottom of the page as if you
-  // stood in it, and a shore only at the back, nearly straight. Stones line
+  // stood in it, and a shore only at the back, winding in coves and points. Stones line
   // the shore and stony ground lies behind them, carrying the season (snow in winter, a
   // scatter of petals, moss or leaves otherwise). Water and shore run on past both sides of
   // the page too. It is rebuilt to the width of the window from the same seed, so nothing
@@ -732,8 +732,8 @@ if (onsenBox) {
     let seed = 7;
     const r = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
     const pick = (list) => list[Math.floor(r() * list.length)];
-    // Where the shore is, from left to right: a long, shallow curve, almost level
-    const shore = (x) => -DEEP - 2 + 2.5 * (x / (long + 30)) ** 2;
+    // Where the shore is, from left to right: it winds back into coves and out into points
+    const shore = (x) => -DEEP - 2 + 2.5 * (x / (long + 30)) ** 2 + 3.5 * Math.sin(x * 0.045 + 0.7) + 2 * Math.sin(x * 0.11 + 2.1);
     const map = new Map();
     vox = map;
     for (let x = -long - 30; x <= long + 30; x++) {
@@ -747,10 +747,13 @@ if (onsenBox) {
     }
     const boulder = (cx, cz, rx, top, rz) =>
       ellipsoid(Math.round(cx), LEVEL - 1, Math.round(cz), rx, top - LEVEL + 1, rz, () => pick(C.rock));
-    // Stones of much the same height, so the shore reads as one even line
+    // Stones of much the same height along the shore, and now and then a few running out into
+    // the water as a point
     for (let x = -long - 30; x <= long + 30; x += 2.6 + r() * 2) {
       boulder(x, shore(x) - r(), 2.4 + r() * 1.6, LEVEL + 2.5 + r() * 1.5, 2 + r());
       if (r() < 0.15) boulder(x + 2, shore(x) - 5, 3 + r() * 1.5, LEVEL + 4 + r() * 2, 3);
+      if (r() < 0.07)
+        for (let k = 1; k <= 3; k++) boulder(x + (r() - 0.5) * 3, shore(x) + k * 2, 2.6 - k * 0.5 + r(), LEVEL + 2.2 - k * 0.6, 2);
     }
     // The season on some of the stones, sparser than at the top
     const tops = new Map();
