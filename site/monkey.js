@@ -902,21 +902,17 @@ if (onsenBox) {
   }
   footScene.add(bucket, sign, seasonal);
 
-  // Where the water comes from: a little waterfall stepping down three rock ledges at the
-  // back into the pool, foaming where it lands
+  // Where the water comes from: a little waterfall pouring in one sheet over a rock ledge at
+  // the back into the pool, foaming where it lands
   const FALL_WATER = 0x8cc4e6;
-  const LEDGES = [
-    { top: 7, z: -6 },
-    { top: 4.5, z: -3 },
-    { top: 2, z: 0 },
-  ];
+  const LEDGES = [{ top: 6, z: 0 }];
   const fall = build(() => {
     const stone = () => C.rock[Math.floor(rand() * C.rock.length)];
-    LEDGES.forEach(({ top, z }, i) => {
-      block(-5 + i, 5 - i, -3, top, z - 3, z, stone);
-      // The water running over each ledge
-      block(-3, 3, top + 1, top + 1, z - 2, z, FALL_WATER);
-    });
+    const { top, z } = LEDGES[0];
+    block(-5, 5, -3, top, z - 6, z, stone);
+    block(-4, 4, -3, top + 1.5, z - 9, z - 6, stone);
+    // The stream running over the ledge to its lip
+    block(-3, 3, top + 1, top + 1, z - 8, z, FALL_WATER);
     ellipsoid(-7, 2, -3.5, 2.8, 6, 4, stone);
     ellipsoid(7, 1.5, -3, 2.8, 5, 4, stone);
     if (SEASON === "winter") {
@@ -930,9 +926,9 @@ if (onsenBox) {
   LEDGES.forEach(({ top, z }, i) => {
     const below = i < LEDGES.length - 1 ? LEDGES[i + 1].top + 1 : 0;
     for (let x = -3; x <= 3; x++)
-      for (let k = 0; k < 3; k++) {
+      for (let k = 0; k < 5; k++) {
         const d = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 0.5), fallMat);
-        d.userData = { x, z: z + 0.8, top: top + 1, height: top + 1 - below, at: k / 3 + Math.random() * 0.2, speed: 1.1 + Math.random() * 0.4 };
+        d.userData = { x, z: z + 0.8, top: top + 1, height: top + 1 - below, at: k / 5 + Math.random() * 0.15, speed: 0.9 + Math.random() * 0.3 };
         footScene.add(d);
         fallDrops.push(d);
       }
