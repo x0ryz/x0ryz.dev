@@ -826,13 +826,13 @@ if (onsenBox) {
     return { g, lid, sleepy, base: LEVEL * (1 - scale) - (sleepy ? 2 : 0), phase: Math.random() * 6, blink: 2 + Math.random() * 4 };
   };
   // A few monkeys, each up to something of its own: a mother dozing with her little one, one
-  // looking about, one that dips under to the eyes now and then, and on wide screens one sat
-  // with its back to you, watching the shore
+  // looking about, one that dips under to the eyes now and then, and on very wide screens one
+  // more, all of them facing you
   const mother = soaker(1.05, 0.25, true);
   const little = soaker(0.55, -0.6, false);
   const looker = Object.assign(soaker(1, 0.3, false), { look: true });
   const dipper = Object.assign(soaker(0.92, -0.2, false), { dip: true });
-  const away = soaker(0.95, Math.PI - 0.5, false);
+  const away = soaker(0.95, -0.35, false);
   const soakers = [mother, little, looker, dipper, away];
 
   // Steam: each wisp rises at its own pace, to its own height, swaying its own way, and when it
@@ -911,8 +911,8 @@ if (onsenBox) {
     lanternPart2.visible = treePart2.visible = roomy;
     onShore(lanternPart2, 0.3 * long, 7, L);
     onShore(treePart2, -0.33 * long, 9, T);
-    // Spread unevenly and at different distances from the shore; the one with its back turned
-    // only on very wide screens. On a phone, the one looking about and the little one.
+    // Spread unevenly and at different distances from the shore; the fourth grown-up only on
+    // very wide screens. On a phone, the one looking about and the little one.
     for (const m of soakers) m.g.visible = false;
     const place = (m, x, z) => {
       m.g.visible = true;
