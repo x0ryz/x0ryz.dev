@@ -61,7 +61,8 @@ cv:
 
     Projects:
       - name: "[hakobu](https://github.com/hakobudev/hakobu) — self-hosted deployment tool (Go, open source)"
-        date: "2026"
+        start_date: 2026
+        end_date: present
         highlights:
           - Self-hosted PaaS that deploys apps from GitHub repos to your own server on push to main — a lightweight alternative to paid platforms. Shipped as a single Go binary with SQLite state and a one-command installer.
           - Zero-downtime blue/green deployments behind a built-in proxy with atomic traffic switching; automatic stack detection (Railpack or Dockerfile).
@@ -76,3 +77,6 @@ cv:
         end_date: 2028
         highlights:
           - "**2nd place, Django Pub Hackathon:** In a 3-person team, built and presented in 3 days a working user authentication module based on qualified electronic digital signatures (EDS)."
+
+design:
+  theme: engineeringresumes
