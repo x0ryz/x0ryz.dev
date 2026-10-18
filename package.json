@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "esbuild site/monkey.js --bundle --minify --format=esm --alias:three/addons=three/examples/jsm --outfile=site/monkey.min.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.23.1",
+    "three": "0.160.0"
+  }
+}

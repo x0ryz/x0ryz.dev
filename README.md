@@ -9,7 +9,7 @@ The monkey and its scene are built from code in [`site/monkey.js`](site/monkey.j
 - `site/` is everything that gets published.
   - `index.html`, `404.html`, `style.css`
   - `season-pick.js` picks the season from the date before the page paints (`?season=spring|summer|autumn|winter` previews one)
-  - `monkey.js` builds and animates the 3D scene
+  - `monkey.js` builds and animates the 3D scene; it is the readable source of `monkey.min.js`, which the pages load
   - `season.js` draws the falling snow, petals or leaves over the page
   - `fonts/` is Onest, under the SIL Open Font License
 - `cv/resume_en.yaml` is the source of `site/Bohdan_Barulin_CV.pdf`, in [RenderCV](https://rendercv.com) format.
@@ -21,6 +21,15 @@ python3 -m http.server -d site 8000
 ```
 
 Then open <http://localhost:8000>. This simple server shows its own 404 page instead of `site/404.html`; Cloudflare Pages uses ours.
+
+## Rebuild the scene
+
+`monkey.min.js` is `monkey.js` bundled with the parts of three.js it uses, so the page needs no CDN. Run this after changing `monkey.js`, and commit both files:
+
+```sh
+npm install
+npm run build
+```
 
 ## Rebuild the CV
 

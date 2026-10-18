@@ -58,8 +58,14 @@
         <div class="intro-text">
           <p class="lede">I build Python backends for businesses, and I ship them with a deploy tool I wrote in Go.</p>
           <p>Computer science student in Lutsk, Ukraine. I like small, boring infrastructure that keeps working.</p>
+          <p class="links reach">
+            <a href="mailto:hello@x0ryz.dev">hello@x0ryz.dev</a>
+            <a href="/Bohdan_Barulin_CV.pdf">CV (PDF)</a>
+            <a href="https://github.com/x0ryz">GitHub</a>
+            <a href="https://www.linkedin.com/in/x0ryz">LinkedIn</a>
+          </p>
         </div>
-        <div class="monkey3d" role="button" tabindex="0" aria-label="Pet the monkey" title="Pet the monkey"></div>
+        <div class="monkey3d"></div>
       </div>
     </header>
 
@@ -129,15 +135,11 @@
       </div>
     </footer>
   </main>
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-      }
-    }
+  <script type="module">
+    // The scene is decoration, so it loads once the page has settled
+    const load = () => import("/monkey.min.js");
+    "requestIdleCallback" in window ? requestIdleCallback(load, { timeout: 2000 }) : setTimeout(load, 300);
   </script>
-  <script type="module" src="/monkey.js"></script>
   <script src="/season.js"></script>
 </body>
 </html>

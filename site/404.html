@@ -22,19 +22,15 @@
           <p>This page went for a soak and hasn’t come back.</p>
           <p class="links"><a href="/">Back to the home page</a></p>
         </div>
-        <div class="monkey3d" role="button" tabindex="0" aria-label="Pet the monkey" title="Pet the monkey"></div>
+        <div class="monkey3d"></div>
       </div>
     </header>
   </main>
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-      }
-    }
+  <script type="module">
+    // The scene is decoration, so it loads once the page has settled
+    const load = () => import("/monkey.min.js");
+    "requestIdleCallback" in window ? requestIdleCallback(load, { timeout: 2000 }) : setTimeout(load, 300);
   </script>
-  <script type="module" src="/monkey.js"></script>
   <script src="/season.js"></script>
 </body>
 </html>

@@ -680,4 +680,9 @@ renderer.setAnimationLoop(() => {
   controls.update(dt);
   renderer.render(scene, camera);
 });
+// Only a scene that has been built is a button: without WebGL or the script it stays an empty box
+box.setAttribute("role", "button");
+box.setAttribute("tabindex", "0");
+box.setAttribute("aria-label", "Pet the monkey");
+box.title = "Pet the monkey";
 box.classList.add("ready");
