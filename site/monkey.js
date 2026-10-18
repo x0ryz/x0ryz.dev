@@ -720,29 +720,68 @@ if (onsenBox) {
     footHemi.intensity = hemi.intensity;
     footSun.color.copy(sun.color);
     footSun.intensity = sun.intensity;
+    lanternGlow.intensity = lanternLight.intensity;
   };
-  darkScheme.addEventListener("change", syncLight);
-  syncLight();
 
 
-  // Rocks along the back of the pool, and a bigger mound at each end
+  // Rocks: boulders of all sizes behind the pool, low ones along its front edge so it reads as
+  // a pool, and a heap at each end. Like the rocks at the top, many carry the season on top.
   const rock = () => C.rock[Math.floor(rand() * C.rock.length)];
+  const boulder = (cx, cz, rx, top, rz) => ellipsoid(cx, LEVEL - 1, cz, rx, top - LEVEL + 1, rz, rock);
+  const season = (map) => {
+    const tops = new Map();
+    for (const k of map.keys()) {
+      const [x, y, z] = parse(k);
+      if (!(tops.get(`${x},${z}`) >= y)) tops.set(`${x},${z}`, y);
+    }
+    for (const [xz, y] of tops) {
+      // Sparser than at the top: a long row of rocks reads as busy much sooner
+      if (y < LEVEL || rand() > S.rocks * 0.3) continue;
+      const [x, z] = xz.split(",").map(Number);
+      map.set(key(x, y + 1, z), S.ground[Math.floor(rand() * S.ground.length)]);
+    }
+  };
   const rim = new Map();
   vox = rim;
-  for (let x = -LONG / 2; x <= LONG / 2; x++) {
-    const h = 2 + Math.floor(rand() * 3 + Math.sin(x * 0.15) * 1.5);
-    for (let z = -17; z <= -14; z++)
-      for (let y = LEVEL - 3; y <= LEVEL + h - (z === -14 ? 1 : 0); y++)
-        put(x, y, z, SEASON === "winter" && y === LEVEL + h - (z === -14 ? 1 : 0) ? C.snow : rock());
+  for (let x = -LONG / 2; x <= LONG / 2; x += 3.5 + rand() * 2.5) {
+    boulder(Math.round(x), -15 + Math.round(rand() * 3 - 1.5), 2.5 + rand() * 2, LEVEL + 1.5 + rand() * 4, 2.5 + rand() * 1.5);
+    if (rand() < 0.3) boulder(Math.round(x + 2), -19, 3 + rand() * 2, LEVEL + 4 + rand() * 4, 3);
   }
-  const mound = new Map();
-  vox = mound;
-  ellipsoid(0, LEVEL - 4, 0, 9, 16, 13, (x, y) => (SEASON === "winter" && y > LEVEL + 9 ? C.snow : rock()));
+  for (let x = -LONG / 2; x <= LONG / 2; x += 7 + rand() * 6)
+    boulder(Math.round(x), 14, 1.5 + rand() * 2, LEVEL + rand(), 1.5 + rand());
+  season(rim);
+  const heap = new Map();
+  vox = heap;
+  boulder(0, 0, 6, LEVEL + 10, 8);
+  boulder(4, -6, 5, LEVEL + 6, 5);
+  boulder(-3, 7, 4, LEVEL + 3, 4);
+  season(heap);
   vox = monkey;
   footScene.add(voxelMesh(rim));
-  const moundMesh = voxelMesh(mound);
-  const ends = [moundMesh, new THREE.Mesh(moundMesh.geometry, moundMesh.material)];
+  const heapMesh = voxelMesh(heap);
+  const ends = [heapMesh, new THREE.Mesh(heapMesh.geometry, heapMesh.material)];
+  ends[1].scale.x = -1;
   footScene.add(...ends);
+
+  // The stone lantern and the tree, lifted out of the scene at the top
+  const lift = (keep) => {
+    const map = new Map();
+    for (const [k, c] of scenery) if (keep(...parse(k), c)) map.set(k, c);
+    return map;
+  };
+  const near = (x, z, at, r) => Math.abs(x - at.x) <= r && Math.abs(z - at.z) <= r;
+  const lantern = voxelMesh(lift((x, y, z) => near(x, z, L, 2) && (y >= 5 || near(x, z, L, 1))));
+  const lanternWindows = new THREE.InstancedMesh(cube, windowMat, windows.length);
+  windows.forEach((p, i) => lanternWindows.setMatrixAt(i, m4.makeTranslation(...p)));
+  const lanternGlow = new THREE.PointLight(0xffb45e, 0, 14, 1.5);
+  lanternGlow.position.set(L.x, 10, L.z);
+  const lanternPart = new THREE.Group();
+  lanternPart.add(lantern, lanternWindows, lanternGlow);
+  const TREE = new Set([BARK, ...(S.canopy || []), 0x5c8746, 0x7fae5e, 0x6d9a52]);
+  const treePart = voxelMesh(lift((x, y, z, c) => near(x, z, T, 9) && y >= 6 && TREE.has(c)));
+  footScene.add(lanternPart, treePart);
+  darkScheme.addEventListener("change", syncLight);
+  syncLight();
 
   // The monkeys share the scene's monkey: its body and its eyelids
   const body = monkeyGroup.children[0];
@@ -760,8 +799,8 @@ if (onsenBox) {
   };
   const soakers = [soaker(1, 0.35, false), soaker(1, 0.1, true), soaker(0.55, -0.5, false), soaker(1, -0.3, false)];
 
-  const footSteam = Array.from({ length: 12 }, (_, i) => {
-    const s = particle(1.8, 0xffffff, 0);
+  const footSteam = Array.from({ length: 18 }, (_, i) => {
+    const s = particle(1.4 + (i % 3) * 0.5, 0xffffff, 0);
     s.userData = { t: i / 12, x: 0 };
     footScene.add(s);
     return s;
@@ -795,6 +834,9 @@ if (onsenBox) {
     const end = wide ? span - 4 : span + 3;
     ends[0].position.x = -end;
     ends[1].position.x = end;
+    // The lantern and the tree stand behind the pool, near the ends
+    lanternPart.position.set(-end + 15 - L.x, LEVEL - 1, -19 - L.z);
+    treePart.position.set(end - 17 - T.x, LEVEL - 1, -20 - T.z);
     // Three monkeys and the little one on a wide page; one and the little one on a phone
     // Three monkeys and the little one on a wide page, one and the little one on a phone.
     // The little one sits beside a grown-up with a gap between them, turned toward it.
