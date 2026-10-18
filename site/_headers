@@ -8,6 +8,13 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
 
+# Pages are checked with the server on every visit: they carry the versioned URLs of the
+# stylesheet and scripts (see scripts/stamp.mjs), so a fresh page brings fresh assets
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+
 # The pages.dev copy stays out of search; x0ryz.dev is the canonical address
 https://x0ryz-dev.pages.dev/*
   X-Robots-Tag: noindex

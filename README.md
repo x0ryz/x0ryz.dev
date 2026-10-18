@@ -27,6 +27,16 @@ python3 -m http.server -d site 8000
 
 Then open <http://localhost:8000>. This simple server shows its own 404 page instead of `site/404.html`; Cloudflare Pages uses ours. `/og.png`, the headers and the 404 page only work under Cloudflare Pages, or locally with `npx wrangler pages dev site`.
 
+## After changing CSS or JavaScript
+
+The pages load `style.css` and the scripts with a hash of their contents (`/style.css?v=1a2b3c4d`), so browsers never keep an old copy after a deploy. Update the hashes before committing:
+
+```sh
+npm run stamp
+```
+
+`npm run build` does it too.
+
 ## Rebuild the scene
 
 `monkey.min.js` is `monkey.js` bundled with the parts of three.js it uses, so the page needs no CDN. Run this after changing `monkey.js`, and commit both files:
