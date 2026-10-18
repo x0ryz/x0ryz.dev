@@ -138,35 +138,22 @@ a:focus-visible {
   z-index: 2;
 }
 
-/* Voxel snow monkey, drawn by monkey.js. .monkey3d keeps its place in the intro;
-   the scene itself is drawn in .monkey-dock, fixed to the window, which sits over that
-   place and moves to the corner when the intro scrolls away. */
+/* Voxel snow monkey, drawn by monkey.js */
 .monkey3d {
   position: relative;
   z-index: 0;
   width: clamp(16rem, 40vw, 34rem);
   aspect-ratio: 1;
   margin: -6rem -2rem -4rem 0;
-}
-@media (max-width: 40rem) {
-  .monkey3d { margin: -1rem auto -2rem; }
-}
-.monkey-dock {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 0;
-  transform-origin: 0 0;
   cursor: grab;
   opacity: 0;
   transition: opacity 0.6s ease;
 }
-/* Moving and in the corner it sits over the page, so it can be petted there */
-.monkey-dock.docked { z-index: 3; }
-.monkey-dock.ready { opacity: 1; }
-.monkey-dock:active { cursor: grabbing; }
+@media (max-width: 40rem) {
+  .monkey3d { margin: -1rem auto -2rem; }
+}
 /* A soft shadow on the page under the pool, so the scene sits on it */
-.monkey-dock::before {
+.monkey3d::before {
   content: "";
   position: absolute;
   z-index: -1;
@@ -176,8 +163,13 @@ a:focus-visible {
   height: 9%;
   border-radius: 50%;
   background: radial-gradient(closest-side, var(--shadow), transparent);
+  opacity: 0;
+  transition: opacity 0.6s ease;
 }
-.monkey-dock canvas {
+.monkey3d.ready::before { opacity: 1; }
+.monkey3d:active { cursor: grabbing; }
+.monkey3d.ready { opacity: 1; }
+.monkey3d canvas {
   display: block;
   touch-action: pan-y;
   /* The box reaches up under the name: the top of the sky (stars at night) fades out there */
@@ -280,7 +272,7 @@ h2 {
 @media print {
   :root, :root[data-season] { --paper: #fff; --ink: #000; --muted: #444; --rule: #bbb; --link: #000; }
   .feature h2 { font-size: 18pt; }
-  .season-bg, .monkey3d, .monkey-dock, .clock { display: none !important; }
+  .season-bg, .monkey3d, .clock { display: none !important; }
   body { font-size: 11pt; }
   main { max-width: none; padding: 0; }
   .intro h1 { font-size: 32pt; white-space: normal; }
