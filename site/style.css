@@ -257,16 +257,6 @@ h2 {
 }
 .side .kind { margin-top: 0.25rem; color: var(--muted); }
 
-/* CV page */
-.cv .home { margin-bottom: 2rem; }
-.cv .intro h1 { font-size: clamp(2.75rem, 8vw, 5.5rem); white-space: normal; }
-.cv .intro-text { margin-top: 2rem; }
-.cv .row { margin-top: 4rem; }
-.skills { margin: 0; max-width: var(--measure); }
-.skills dt { font-weight: 500; }
-.skills dd { margin: 0.125rem 0 0; color: var(--muted); }
-.skills dd + dt { margin-top: 0.75rem; }
-
 /* 404 */
 .lost h1 {
   font-weight: 800;
@@ -288,7 +278,6 @@ h2 {
   .reach { display: none; }
   .row { margin-top: 1.5rem; padding-top: 0.75rem; break-inside: avoid; display: grid; grid-template-columns: 9rem 1fr; column-gap: 1.5rem; }
   .contacts a[href^="http"]::after { content: " (" attr(href) ")"; color: var(--muted); }
-  .cv .home { display: none; }
 }
 
 /* Line breaking: even lines in headings, no lone last word in paragraphs */

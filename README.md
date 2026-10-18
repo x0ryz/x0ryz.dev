@@ -12,7 +12,7 @@ The monkey and its scene are built from code in [`site/monkey.js`](site/monkey.j
   - `monkey.js` builds and animates the 3D scene; it is the readable source of `monkey.min.js`, which the pages load
   - `season.js` draws the falling snow, petals or leaves over the page
   - `fonts/` is Onest, under the SIL Open Font License
-- `cv/resume_en.yaml` is the source of the CV: the PDF and the `/cv/` page, see below.
+- `cv/resume_en.yaml` is the source of `site/Bohdan_Barulin_CV.pdf`, in [RenderCV](https://rendercv.com) format.
 
 ## Run locally
 
@@ -33,16 +33,13 @@ npm run build
 
 ## Rebuild the CV
 
-`cv/resume_en.yaml` is the one source of the CV. `cv/build.sh` turns it into two things:
-
-- `site/Bohdan_Barulin_CV.pdf`, with [RenderCV](https://rendercv.com) in its `engineeringresumes` theme
-- `site/cv/index.html`, the same CV as a page in the site's style, written by `cv/page.py`
+`cv/build.sh` renders `cv/resume_en.yaml` to `site/Bohdan_Barulin_CV.pdf` with RenderCV, in its `engineeringresumes` theme. The home page is the CV on the web; the PDF is the full version to send or print.
 
 ```sh
 ./cv/build.sh
 ```
 
-It needs [uv](https://docs.astral.sh/uv/); RenderCV is pinned in the script, so a new release can't change the PDF unasked. Commit the PDF and the page with the YAML.
+It needs [uv](https://docs.astral.sh/uv/); RenderCV is pinned in the script, so a new release can't change the PDF unasked. Commit the PDF with the YAML.
 
 ## Deploy
 
