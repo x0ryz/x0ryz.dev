@@ -440,7 +440,9 @@ const floaters = (S.float || []).flatMap((color) =>
 );
 
 // Now and then something lands on the monkey's head: a snowflake, a petal or a leaf.
-// It sits there for a moment, then the monkey shakes it off.
+// It sits there for a moment, then the monkey shakes it off. A visit only starts when the
+// monkey will stay awake until it is over, and shaking wakes the monkey up again, so it
+// never dozes off around the time a visitor comes.
 const visitor = particle(
   SEASON === "winter" ? 1.4 : [2, 0.4, 1.6],
   { winter: C.snow, spring: 0xf6b6c9, summer: 0x7fae5e, autumn: 0xe0782c }[SEASON],
@@ -453,7 +455,6 @@ const FALL = 2.5;
 const SIT = 4.5;
 const SHAKE = 0.8;
 let visit = -1;
-let nextVisit = 15 + Math.random() * 15;
 let perch = [0, 0];
 let fling = 1;
 
@@ -592,6 +593,8 @@ const IDLE = 20;
 const now = () => performance.now() / 1000;
 let lastActive = now();
 let wakeUntil = 0;
+// The first visitor comes soon after the scene shows up, while the monkey is still awake
+let nextVisit = now() + 4;
 renderer.domElement.addEventListener("pointermove", () => (lastActive = now()));
 box.addEventListener("focus", () => (lastActive = now()));
 const kyivHour = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Kyiv", hour: "numeric", hourCycle: "h23" });
@@ -675,7 +678,8 @@ renderer.setAnimationLoop(() => {
   for (const arm of armParts) arm.rotation.x = 1.0 * rest;
 
   // A visitor on the head: it falls, sits, and is shaken off (or knocked off by a pat)
-  if (visit < 0 && !reduceMotion && !asleep && pet < 0 && t > nextVisit) {
+  const awakeFor = Math.max(nightInKyiv() ? 0 : IDLE - (now() - lastActive), wakeUntil - now());
+  if (visit < 0 && !reduceMotion && !asleep && pet < 0 && now() > nextVisit && awakeFor > SIT + SHAKE + 2) {
     visit = 0;
     perch = [(Math.random() - 0.5) * 5, (Math.random() - 0.5) * 3];
     fling = Math.random() < 0.5 ? -1 : 1;
@@ -703,8 +707,9 @@ renderer.setAnimationLoop(() => {
       visitor.material.opacity = Math.max(0, 1 - f / 1.3);
       if (f > 1.3) {
         visit = -1;
+        lastActive = now();
         monkeyGroup.rotation.y = 0;
-        nextVisit = t + 25 + Math.random() * 20;
+        nextVisit = now() + 25 + Math.random() * 20;
       }
     }
   }
