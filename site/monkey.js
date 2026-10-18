@@ -905,7 +905,7 @@ if (onsenBox) {
 
   // Where the water comes from: a low waterfall. A stream runs out between two boulders,
   // over a stone lip lower than the shore, and drops in one sheet into the pool, which
-  // answers it: the water stirs pale where it lands and rings spread out across the pool.
+  // answers it: the water churns pale where it lands and waves run out across the pool.
   // It stands in front of the shore stones.
   const FALL_WATER = 0x8cc4e6;
   const LIP = 3; // the top of the stream, from the ground
@@ -920,33 +920,46 @@ if (onsenBox) {
     for (const [x, y, z] of [[-6, 4, -2], [6, 3, -1.5], [0, 4, -6]])
       ellipsoid(x, y, z, 2, 0.6, 2.2, SEASON === "winter" ? C.snow : () => (rand() < 0.35 ? S.ground[Math.floor(rand() * S.ground.length)] : undefined));
   }, 0);
-  // The sheet of water: a pale see-through curtain with brighter streaks running down it
-  const curtain = new THREE.Mesh(
-    new THREE.BoxGeometry(7, LIP + 0.4, 0.25),
-    new THREE.MeshLambertMaterial({ color: 0xa9d6ef, transparent: true, opacity: 0.6, depthWrite: false }),
-  );
-  const streakMat = new THREE.MeshLambertMaterial({ color: 0xeef7fc, transparent: true, opacity: 0.95, depthWrite: false });
-  const fallDrops = [];
-  for (let x = -2.5; x <= 2.5; x += 2.5)
-    for (let k = 0; k < 2; k++) {
-      const d = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.4, 0.35), streakMat);
-      d.userData = { x, at: k / 2 + Math.random() * 0.2, speed: 0.9 + Math.random() * 0.3 };
-      footScene.add(d);
-      fallDrops.push(d);
+  // The sheet of water: a see-through curtain whose streaks flow down without a break, a
+  // small pixel texture scrolled down it
+  const flowCanvas = document.createElement("canvas");
+  flowCanvas.width = 14;
+  flowCanvas.height = 32;
+  const flow = flowCanvas.getContext("2d");
+  flow.fillStyle = "rgba(169, 214, 239, 0.75)";
+  flow.fillRect(0, 0, 14, 32);
+  for (let x = 0; x < 14; x++)
+    for (let n = 0; n < 2; n++) {
+      const y = Math.floor(Math.random() * 32);
+      const len = 4 + Math.floor(Math.random() * 9);
+      flow.fillStyle = `rgba(244, 251, 255, ${0.55 + Math.random() * 0.4})`;
+      for (let k = 0; k < len; k++) flow.fillRect(x, (y + k) % 32, 1, 1);
     }
-  // The pool's answer: a pale stir where the sheet lands, and rings spreading out from it
-  const stir = new THREE.Mesh(
-    new THREE.BoxGeometry(7.5, 0.15, 2.4),
-    new THREE.MeshBasicMaterial({ color: 0xf4fbff, transparent: true, opacity: 0.5, depthWrite: false }),
+  const flowTexture = new THREE.CanvasTexture(flowCanvas);
+  flowTexture.magFilter = THREE.NearestFilter;
+  flowTexture.wrapT = THREE.RepeatWrapping;
+  flowTexture.colorSpace = THREE.SRGBColorSpace;
+  const curtain = new THREE.Mesh(
+    new THREE.PlaneGeometry(7, LIP + 0.4),
+    new THREE.MeshBasicMaterial({ map: flowTexture, transparent: true, depthWrite: false }),
   );
-  const RING = 44;
-  const rings = [0, 1 / 3, 2 / 3].map((delay) => {
-    const mat = new THREE.MeshBasicMaterial({ color: 0xf4fbff, transparent: true, opacity: 0, depthWrite: false });
-    const ring = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.15, 0.9), mat, RING);
-    footScene.add(ring);
-    return { ring, mat, delay };
-  });
-  footScene.add(stir);
+  footScene.add(curtain);
+
+  // The pool's answer: a patch of surface over the water around where the sheet lands. Waves
+  // run out from the foot of the fall in rings, wider than deep, and fade with distance; their
+  // crests catch the light, and the water right under the fall stays churned and pale.
+  const WAVES = { w: 44, d: 26 };
+  const waves = new THREE.PlaneGeometry(WAVES.w, WAVES.d, WAVES.w, WAVES.d);
+  waves.rotateX(-Math.PI / 2);
+  const waveAlpha = new Float32Array(waves.attributes.position.count * 4);
+  waves.setAttribute("color", new THREE.BufferAttribute(waveAlpha, 4));
+  const wavePatch = new THREE.Mesh(
+    waves,
+    new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false }),
+  );
+  // Drawn after the pool's water, which would otherwise cover it
+  wavePatch.renderOrder = curtain.renderOrder = 1;
+  footScene.add(wavePatch);
   footScene.add(curtain);
   footScene.add(fall);
   darkScheme.addEventListener("change", syncLight);
@@ -1128,32 +1141,30 @@ if (onsenBox) {
       f.position.set(x, LEVEL - 0.2, u.z * 0.6 + 3);
       f.rotation.y = a * 20;
     }
-    // The waterfall: streaks running down the sheet
+    // The waterfall: the streaks flow down the sheet, and the pool answers it
     const at = fall.position;
     const surface = 0.6; // the pool's surface, from the ground
-    curtain.position.set(at.x, at.y + (LIP + surface) / 2, at.z + 0.7);
-    for (const d of fallDrops) {
-      const u = d.userData;
-      const p = reduceMotion ? u.at % 1 : (ft * u.speed + u.at) % 1;
-      d.position.set(at.x + u.x, at.y + LIP - p * (LIP - surface), at.z + 0.75);
+    curtain.position.set(at.x, at.y + (LIP + surface) / 2, at.z + 0.75);
+    if (!reduceMotion) flowTexture.offset.y = (ft * 0.9) % 1;
+    // The waves patch: its back edge at the foot of the fall, reaching out in front of it
+    const foot0 = { x: at.x, z: at.z + 1.2 };
+    wavePatch.position.set(foot0.x, LEVEL - 0.33, foot0.z + WAVES.d / 2 - 1);
+    const pos = waves.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const dx = pos.getX(i);
+      const dz = pos.getZ(i) + WAVES.d / 2 - 1;
+      // Distance from the foot of the fall, stretched so the rings come out wider than deep
+      const r = Math.hypot(dx / 1.35, dz / 0.75);
+      const edge = Math.min(1, (WAVES.w / 2 - Math.abs(dx)) / 5, (WAVES.d - 1 - dz) / 5);
+      const wave = reduceMotion ? 0 : Math.sin(r * 1.1 - ft * 3.2);
+      const fade = Math.exp(-r / 7) * Math.max(0, edge);
+      const crest = Math.max(0, wave) ** 3;
+      const churn = Math.max(0, 1 - r / 3) * (0.45 + (reduceMotion ? 0 : 0.2 * Math.sin(ft * 11 + dx * 2)));
+      pos.setY(i, wave * 0.25 * fade);
+      waveAlpha.set([0.96, 0.98, 1, Math.min(0.85, crest * 0.75 * fade + churn)], i * 4);
     }
-    // The stir pulses; the rings grow from the foot of the sheet out across the water, wider
-    // than deep, around the front and sides, and fade as they go
-    const foot0 = { x: at.x, z: at.z + 1.6 };
-    stir.position.set(foot0.x, LEVEL - 0.35, foot0.z);
-    stir.material.opacity = reduceMotion ? 0.45 : 0.4 + 0.15 * Math.sin(ft * 9);
-    for (const { ring, mat, delay } of rings) {
-      ring.visible = !reduceMotion;
-      if (!ring.visible) continue;
-      const p = (ft / 3.6 + delay) % 1;
-      const r = 3 + p * 16;
-      for (let i = 0; i < RING; i++) {
-        const a = -0.15 * Math.PI + (i / (RING - 1)) * 1.3 * Math.PI;
-        ring.setMatrixAt(i, m4.makeTranslation(foot0.x + Math.cos(a) * r * 1.35, LEVEL - 0.35, foot0.z + Math.sin(a) * r * 0.7));
-      }
-      ring.instanceMatrix.needsUpdate = true;
-      mat.opacity = 0.8 * (1 - p) ** 1.5;
-    }
+    pos.needsUpdate = true;
+    waves.attributes.color.needsUpdate = true;
     // The butterfly or the dragonfly: wanders, flapping, or darts and hovers
     if (flyer && flyer.userData.home) {
       const u = flyer.userData;
