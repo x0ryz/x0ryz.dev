@@ -259,7 +259,7 @@ h2 {
 }
 .side .kind { margin-top: 0.25rem; color: var(--muted); }
 
-/* The hot spring at the foot of the page, drawn by onsen.js. It reaches up behind the
+/* The hot spring at the foot of the page, drawn by monkey.js. It reaches up behind the
    contact section, so the steam rises behind the links; without the script it takes no room. */
 .onsen {
   position: relative;

@@ -9,9 +9,8 @@ The monkey and its scene are built from code in [`site/monkey.js`](site/monkey.j
 - `site/` is the source of everything that gets published; `npm run build` turns it into `dist/`.
   - `index.html`, `404.html`, `style.css`
   - `season-pick.js` picks the season from the date before the page paints (`?season=spring|summer|autumn|winter` previews one)
-  - `monkey.js` builds and animates the 3D scene; the build bundles it with three.js into `monkey.min.js`, which the pages load
+  - `monkey.js` builds and animates the 3D scene, and the hot spring at the foot of the page where the same monkey soaks a few times over; the build bundles it with three.js into `monkey.min.js`, which the pages load
   - `season.js` draws the falling snow, petals or leaves over the page
-  - `onsen.js` draws the hot spring at the foot of the page: snow monkeys soaking in it (one asleep, one with a little one), steam and rocks
   - `page.js` loads the scene once the page is idle, and runs the clock in Lutsk
   - `og-<season>.png` are the link preview images, one per season
   - `_headers` sets the security headers (a strict Content-Security-Policy: every script and style comes from this site)

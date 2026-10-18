@@ -686,3 +686,157 @@ box.setAttribute("tabindex", "0");
 box.setAttribute("aria-label", "Pet the monkey");
 box.title = "Pet the monkey";
 box.classList.add("ready");
+
+// --- The hot spring at the foot of the page ---
+// The same monkey a few times over, and a little one, soaking up to the shoulders in a long
+// pool with rocks behind it and steam rising. Drawn by its own renderer, only while the foot
+// of the page is in view.
+const onsenBox = document.querySelector(".onsen");
+if (onsenBox) {
+  const LEVEL = 10; // the water comes up to the shoulders
+  const LONG = 340; // longer than the widest window shows
+  const foot = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  foot.setPixelRatio(Math.min(devicePixelRatio, 2));
+  foot.domElement.setAttribute("aria-hidden", "true");
+  onsenBox.appendChild(foot.domElement);
+  const footScene = new THREE.Scene();
+
+  // Murkier than the water at the top, so the bodies under it don't show as grey shapes
+  const footWater = waterMat.clone();
+  footWater.opacity = 0.88;
+  const pool = new THREE.Mesh(new THREE.BoxGeometry(LONG, 18, 30), footWater);
+  pool.position.y = LEVEL - 9;
+  footScene.add(pool);
+
+  // The same light as the scene at the top, day or night
+  const footHemi = new THREE.HemisphereLight();
+  const footSun = new THREE.DirectionalLight();
+  footSun.position.set(-14, 22, 10);
+  footScene.add(footHemi, footSun);
+  const syncLight = () => {
+    footWater.color.copy(waterMat.color);
+    footHemi.color.copy(hemi.color);
+    footHemi.groundColor.copy(hemi.groundColor);
+    footHemi.intensity = hemi.intensity;
+    footSun.color.copy(sun.color);
+    footSun.intensity = sun.intensity;
+  };
+  darkScheme.addEventListener("change", syncLight);
+  syncLight();
+
+
+  // Rocks along the back of the pool, and a bigger mound at each end
+  const rock = () => C.rock[Math.floor(rand() * C.rock.length)];
+  const rim = new Map();
+  vox = rim;
+  for (let x = -LONG / 2; x <= LONG / 2; x++) {
+    const h = 2 + Math.floor(rand() * 3 + Math.sin(x * 0.15) * 1.5);
+    for (let z = -17; z <= -14; z++)
+      for (let y = LEVEL - 3; y <= LEVEL + h - (z === -14 ? 1 : 0); y++)
+        put(x, y, z, SEASON === "winter" && y === LEVEL + h - (z === -14 ? 1 : 0) ? C.snow : rock());
+  }
+  const mound = new Map();
+  vox = mound;
+  ellipsoid(0, LEVEL - 4, 0, 9, 16, 13, (x, y) => (SEASON === "winter" && y > LEVEL + 9 ? C.snow : rock()));
+  vox = monkey;
+  footScene.add(voxelMesh(rim));
+  const moundMesh = voxelMesh(mound);
+  const ends = [moundMesh, new THREE.Mesh(moundMesh.geometry, moundMesh.material)];
+  footScene.add(...ends);
+
+  // The monkeys share the scene's monkey: its body and its eyelids
+  const body = monkeyGroup.children[0];
+  const soaker = (scale, turn, sleepy) => {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(body.geometry, body.material));
+    const lid = new THREE.Mesh(lidMesh.geometry, lidMesh.material);
+    lid.visible = sleepy;
+    g.add(lid);
+    g.scale.setScalar(scale);
+    g.rotation.y = turn;
+    footScene.add(g);
+    // Placed so the water line falls at the same height on the monkey at any size
+    return { g, lid, sleepy, base: LEVEL * (1 - scale) - (sleepy ? 2 : 0), phase: Math.random() * 6, blink: 2 + Math.random() * 4 };
+  };
+  const soakers = [soaker(1, 0.35, false), soaker(1, 0, true), soaker(0.6, -0.4, false), soaker(1, -0.3, false)];
+
+  const footSteam = Array.from({ length: 12 }, (_, i) => {
+    const s = particle(1.8, 0xffffff, 0);
+    s.userData = { t: i / 12, x: 0 };
+    footScene.add(s);
+    return s;
+  });
+  const footFloat = (S.float || []).flatMap((color) =>
+    Array.from({ length: 4 }, () => {
+      const f = particle([1.4, 0.3, 1.1], color, 1);
+      f.userData = { at: Math.random(), z: -10 + Math.random() * 20, speed: 0.004 + Math.random() * 0.004 };
+      footScene.add(f);
+      return f;
+    }),
+  );
+  const steamColor = () => (darkScheme.matches ? 0x9aa9ba : 0xd8e0e8);
+  darkScheme.addEventListener("change", () => footSteam.forEach((s) => s.material.color.setHex(steamColor())));
+  footSteam.forEach((s) => s.material.color.setHex(steamColor()));
+
+  const footCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
+  footCam.position.set(14, 40, 90);
+  footCam.lookAt(0, LEVEL + 11, 0);
+  const HALF = 19;
+  let span = 0; // half the width of the pool in view
+  function fit() {
+    const w = onsenBox.clientWidth;
+    const h = onsenBox.clientHeight;
+    foot.setSize(w, h);
+    span = (HALF * w) / h;
+    Object.assign(footCam, { left: -span, right: span, top: HALF, bottom: -HALF });
+    footCam.updateProjectionMatrix();
+    ends[0].position.x = -span + 4;
+    ends[1].position.x = span - 4;
+    // Three monkeys and the little one on a wide page; one and the little one on a phone
+    const wide = span > 60;
+    const at = wide ? [-0.5 * span, 0, 13, 0.5 * span] : [null, -7, 9, null];
+    soakers.forEach((m, i) => {
+      m.g.visible = at[i] !== null;
+      m.g.position.x = at[i] ?? 0;
+    });
+    // On a phone the one shown awake is the first, so the sleeper's place goes to it
+    if (!wide) {
+      soakers[0].g.visible = true;
+      soakers[0].g.position.x = -7;
+      soakers[1].g.visible = false;
+    }
+    footSteam.forEach((s, i) => (s.userData.x = (-0.9 + (1.8 * (i + 0.5)) / footSteam.length) * span + Math.sin(i * 7) * 3));
+    draw(0);
+  }
+
+  const footClock = new THREE.Clock();
+  let ft = 0;
+  function draw(dt) {
+    ft += dt;
+    for (const m of soakers) {
+      m.g.position.y = m.base + (reduceMotion ? 0 : Math.sin(ft * 0.9 + m.phase) * 0.35);
+      if (!m.sleepy) m.lid.visible = !reduceMotion && (ft + m.phase) % m.blink < 0.14;
+    }
+    for (const s of footSteam) {
+      const p = reduceMotion ? 0.3 : (ft * 0.12 + s.userData.t) % 1;
+      s.position.set(s.userData.x + Math.sin(p * 6 + s.userData.t * 9) * 1.5, LEVEL + 1 + p * 22, -4);
+      s.material.opacity = 0.6 * Math.sin(p * Math.PI);
+    }
+    for (const f of footFloat) {
+      const u = f.userData;
+      const a = (u.at + (reduceMotion ? 0 : ft * u.speed)) % 1;
+      f.position.set((a * 2 - 1) * span, LEVEL + 0.2, u.z);
+      f.rotation.y = a * 20;
+    }
+    foot.render(footScene, footCam);
+  }
+
+  onsenBox.classList.add("ready");
+  new ResizeObserver(fit).observe(onsenBox);
+  darkScheme.addEventListener("change", () => draw(0));
+  if (!reduceMotion)
+    new IntersectionObserver(([e]) => {
+      footClock.getDelta();
+      foot.setAnimationLoop(e.isIntersecting ? () => draw(Math.min(footClock.getDelta(), 0.1)) : null);
+    }).observe(onsenBox);
+}
