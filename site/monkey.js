@@ -904,7 +904,7 @@ if (onsenBox) {
   footScene.add(bucket, sign, seasonal);
 
   // Where the water comes from: a low waterfall. A stream runs out between two boulders,
-  // over a stone lip lower than the shore, and drops in one clear sheet into the pool; spray
+  // over a stone lip lower than the shore, and drops into the pool; spray
   // jumps and foam churns where it lands. It stands in front of the shore stones.
   const FALL_WATER = 0x8cc4e6;
   const LIP = 3; // the top of the stream, from the ground
@@ -919,17 +919,14 @@ if (onsenBox) {
     for (const [x, y, z] of [[-6, 4, -2], [6, 3, -1.5], [0, 4, -6]])
       ellipsoid(x, y, z, 2, 0.6, 2.2, SEASON === "winter" ? C.snow : () => (rand() < 0.35 ? S.ground[Math.floor(rand() * S.ground.length)] : undefined));
   }, 0);
-  // The sheet of water: a pale see-through curtain with brighter streaks running down it
-  const curtain = new THREE.Mesh(
-    new THREE.BoxGeometry(7, LIP + 0.4, 0.25),
-    new THREE.MeshLambertMaterial({ color: 0xa9d6ef, transparent: true, opacity: 0.6, depthWrite: false }),
-  );
-  const streakMat = new THREE.MeshLambertMaterial({ color: 0xeef7fc, transparent: true, opacity: 0.95, depthWrite: false });
+  // The falling water: columns of pale cubes running down off the lip, as on the stepped
+  // waterfall it replaced
+  const fallMat = new THREE.MeshLambertMaterial({ color: 0xd6ecf7, transparent: true, opacity: 0.9, depthWrite: false });
   const fallDrops = [];
   for (let x = -3; x <= 3; x++)
-    for (let k = 0; k < 4; k++) {
-      const d = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.3, 0.35), streakMat);
-      d.userData = { x: x + (Math.random() - 0.5) * 0.4, at: k / 4 + Math.random() * 0.15, speed: 1 + Math.random() * 0.4 };
+    for (let k = 0; k < 3; k++) {
+      const d = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 0.5), fallMat);
+      d.userData = { x, at: k / 3 + Math.random() * 0.2, speed: 1.1 + Math.random() * 0.4 };
       footScene.add(d);
       fallDrops.push(d);
     }
@@ -950,7 +947,6 @@ if (onsenBox) {
     footScene.add(d);
     return d;
   });
-  footScene.add(curtain);
   footScene.add(fall);
   darkScheme.addEventListener("change", syncLight);
   syncLight();
@@ -1131,14 +1127,13 @@ if (onsenBox) {
       f.position.set(x, LEVEL - 0.2, u.z * 0.6 + 3);
       f.rotation.y = a * 20;
     }
-    // The waterfall: streaks running down the sheet, spray hopping, foam churning
+    // The waterfall: water running down off the lip, spray hopping, foam churning
     const at = fall.position;
     const surface = 0.6; // the pool's surface, from the ground
-    curtain.position.set(at.x, at.y + (LIP + surface) / 2, at.z + 0.7);
     for (const d of fallDrops) {
       const u = d.userData;
       const p = reduceMotion ? u.at % 1 : (ft * u.speed + u.at) % 1;
-      d.position.set(at.x + u.x, at.y + LIP - p * (LIP - surface), at.z + 0.75);
+      d.position.set(at.x + u.x, at.y + LIP + 1 - p * (LIP + 1 - surface), at.z + 0.8);
     }
     for (const d of spray) {
       const u = d.userData;
