@@ -758,7 +758,7 @@ if (onsenBox) {
     // Placed so the water line falls at the same height on the monkey at any size
     return { g, lid, sleepy, base: LEVEL * (1 - scale) - (sleepy ? 2 : 0), phase: Math.random() * 6, blink: 2 + Math.random() * 4 };
   };
-  const soakers = [soaker(1, 0.35, false), soaker(1, 0, true), soaker(0.6, -0.4, false), soaker(1, -0.3, false)];
+  const soakers = [soaker(1, 0.35, false), soaker(1, 0.1, true), soaker(0.55, -0.5, false), soaker(1, -0.3, false)];
 
   const footSteam = Array.from({ length: 12 }, (_, i) => {
     const s = particle(1.8, 0xffffff, 0);
@@ -790,21 +790,19 @@ if (onsenBox) {
     span = (HALF * w) / h;
     Object.assign(footCam, { left: -span, right: span, top: HALF, bottom: -HALF });
     footCam.updateProjectionMatrix();
-    ends[0].position.x = -span + 4;
-    ends[1].position.x = span - 4;
-    // Three monkeys and the little one on a wide page; one and the little one on a phone
     const wide = span > 60;
-    const at = wide ? [-0.5 * span, 0, 13, 0.5 * span] : [null, -7, 9, null];
+    // On a phone the end rocks stand half out of view, to leave room for the monkeys
+    const end = wide ? span - 4 : span + 3;
+    ends[0].position.x = -end;
+    ends[1].position.x = end;
+    // Three monkeys and the little one on a wide page; one and the little one on a phone
+    // Three monkeys and the little one on a wide page, one and the little one on a phone.
+    // The little one sits beside a grown-up with a gap between them, turned toward it.
+    const at = wide ? [-0.55 * span, -4, 17, 0.55 * span] : [-10, null, 11, null];
     soakers.forEach((m, i) => {
       m.g.visible = at[i] !== null;
       m.g.position.x = at[i] ?? 0;
     });
-    // On a phone the one shown awake is the first, so the sleeper's place goes to it
-    if (!wide) {
-      soakers[0].g.visible = true;
-      soakers[0].g.position.x = -7;
-      soakers[1].g.visible = false;
-    }
     footSteam.forEach((s, i) => (s.userData.x = (-0.9 + (1.8 * (i + 0.5)) / footSteam.length) * span + Math.sin(i * 7) * 3));
     draw(0);
   }
