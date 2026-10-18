@@ -80,8 +80,12 @@
   let monkeys = [];
   function resize() {
     const ratio = Math.min(devicePixelRatio, 2);
-    w = canvas.clientWidth;
-    h = canvas.clientHeight;
+    // Sized from the box and set here too, not only in style.css: with a stale cached
+    // stylesheet the canvas would otherwise show at its pixel size, twice the screen wide
+    w = box.clientWidth;
+    h = box.clientHeight || 240;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
     canvas.width = w * ratio;
     canvas.height = h * ratio;
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
