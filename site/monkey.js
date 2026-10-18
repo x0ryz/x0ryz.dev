@@ -832,12 +832,34 @@ if (onsenBox) {
   const littles = [soaker(0.55, -0.5, false), soaker(0.55, 0.5, false)];
   const soakers = [...adults, ...littles];
 
-  const footSteam = Array.from({ length: 26 }, (_, i) => {
-    const s = particle(1.4 + (i % 3) * 0.5, 0xffffff, 0);
-    s.userData = { t: i / 12, x: 0 };
+  // Steam: each wisp rises at its own pace, to its own height, swaying its own way, and when it
+  // has faded it starts again somewhere new, more often near a monkey, so nothing repeats
+  const footSteam = Array.from({ length: 26 }, () => {
+    const s = particle(1, 0xffffff, 0);
+    s.userData = { p: Math.random() };
     footScene.add(s);
     return s;
   });
+  function puff(s, fresh) {
+    const u = s.userData;
+    const near = soakers.filter((m) => m.g.visible);
+    const x =
+      near.length && Math.random() < 0.6
+        ? near[Math.floor(Math.random() * near.length)].g.position.x + (Math.random() - 0.5) * 20
+        : (Math.random() * 2 - 1) * poolLong * 0.95;
+    Object.assign(u, {
+      x,
+      z: 9 - Math.random() * 16,
+      p: fresh ? Math.random() : 0,
+      speed: 0.06 + Math.random() * 0.08,
+      rise: 14 + Math.random() * 14,
+      drift: (Math.random() - 0.5) * 6,
+      sway: 0.8 + Math.random() * 1.6,
+      swayAt: Math.random() * 6,
+      peak: 0.45 + Math.random() * 0.35,
+    });
+    s.scale.setScalar(1.1 + Math.random() * 1.3);
+  }
   const footFloat = (S.float || []).flatMap((color) =>
     Array.from({ length: 4 }, () => {
       const f = particle([1.4, 0.3, 1.1], color, 1);
@@ -901,7 +923,7 @@ if (onsenBox) {
     const middle = adults[Math.floor((count - 1) / 2)].g.position.x;
     place(littles[0], middle + (wide ? 17 : 21));
     if (count >= 5) place(littles[1], adults[count - 1].g.position.x - 20);
-    footSteam.forEach((s, i) => (s.userData.x = (-0.9 + (1.8 * (i + 0.5)) / footSteam.length) * long + Math.sin(i * 7) * 3));
+    footSteam.forEach((s) => puff(s, true));
     draw(0);
   }
 
@@ -914,9 +936,15 @@ if (onsenBox) {
       if (!m.sleepy) m.lid.visible = !reduceMotion && (ft + m.phase) % m.blink < 0.14;
     }
     for (const s of footSteam) {
-      const p = reduceMotion ? 0.3 : (ft * 0.12 + s.userData.t) % 1;
-      s.position.set(s.userData.x + Math.sin(p * 6 + s.userData.t * 9) * 1.5, LEVEL + 1 + p * 22, -4);
-      s.material.opacity = 0.6 * Math.sin(p * Math.PI);
+      const u = s.userData;
+      if (!reduceMotion) {
+        u.p += dt * u.speed;
+        if (u.p >= 1) puff(s, false);
+      }
+      const p = u.p;
+      s.position.set(u.x + u.drift * p + Math.sin(ft * u.sway + u.swayAt) * 1.2 * p, LEVEL + 0.5 + p * u.rise, u.z);
+      s.rotation.y = u.swayAt + p * 2;
+      s.material.opacity = u.peak * Math.sin(p * Math.PI) ** 1.5;
     }
     for (const f of footFloat) {
       const u = f.userData;
