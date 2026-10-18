@@ -901,6 +901,49 @@ if (onsenBox) {
     footScene.add(flyer);
   }
   footScene.add(bucket, sign, seasonal);
+
+  // Where the water comes from: a little waterfall stepping down three rock ledges at the
+  // back into the pool, foaming where it lands
+  const FALL_WATER = 0x8cc4e6;
+  const LEDGES = [
+    { top: 10, z: -7 },
+    { top: 6.5, z: -3.5 },
+    { top: 3, z: 0 },
+  ];
+  const fall = build(() => {
+    const stone = () => C.rock[Math.floor(rand() * C.rock.length)];
+    LEDGES.forEach(({ top, z }, i) => {
+      block(-5 + i, 5 - i, -3, top, z - 3, z, stone);
+      // The water running over each ledge
+      block(-3, 3, top + 1, top + 1, z - 2, z, FALL_WATER);
+    });
+    ellipsoid(-7, 4, -4, 2.8, 7, 4.5, stone);
+    ellipsoid(7, 3, -3, 2.8, 6, 4.5, stone);
+    if (SEASON === "winter") {
+      ellipsoid(-7, 10.5, -4, 2.4, 0.8, 3.5, C.snow);
+      ellipsoid(7, 8.5, -3, 2.4, 0.8, 3.5, C.snow);
+    }
+  }, 0);
+  // Falling water: columns of cubes running down each step, lighter and darker in turn
+  const fallMat = new THREE.MeshLambertMaterial({ color: 0xd6ecf7, transparent: true, opacity: 0.9, depthWrite: false });
+  const fallDrops = [];
+  LEDGES.forEach(({ top, z }, i) => {
+    const below = i < LEDGES.length - 1 ? LEDGES[i + 1].top + 1 : 0;
+    for (let x = -3; x <= 3; x++)
+      for (let k = 0; k < 3; k++) {
+        const d = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 0.5), fallMat);
+        d.userData = { x, z: z + 0.8, top: top + 1, height: top + 1 - below, at: k / 3 + Math.random() * 0.2, speed: 1.1 + Math.random() * 0.4 };
+        footScene.add(d);
+        fallDrops.push(d);
+      }
+  });
+  const foam = [0, 0.7].map((delay) => {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xf4fbff, transparent: true, opacity: 0, depthWrite: false });
+    const ring = new THREE.InstancedMesh(new THREE.BoxGeometry(0.8, 0.2, 0.8), mat, 24);
+    footScene.add(ring);
+    return { ring, mat, delay };
+  });
+  footScene.add(fall);
   darkScheme.addEventListener("change", syncLight);
   syncLight();
 
@@ -945,10 +988,14 @@ if (onsenBox) {
   function puff(s, fresh) {
     const u = s.userData;
     const near = soakers.filter((m) => m.g.visible);
+    const roll = Math.random();
+    // A quarter of it rises where the waterfall lands, most of the rest near a monkey
     const x =
-      near.length && Math.random() < 0.6
-        ? near[Math.floor(Math.random() * near.length)].g.position.x + (Math.random() - 0.5) * 20
-        : (Math.random() * 2 - 1) * poolLong * 0.95;
+      fall.visible && roll < 0.25
+        ? fall.position.x + (Math.random() - 0.5) * 10
+        : near.length && roll < 0.7
+          ? near[Math.floor(Math.random() * near.length)].g.position.x + (Math.random() - 0.5) * 20
+          : (Math.random() * 2 - 1) * poolLong * 0.95;
     Object.assign(u, {
       x,
       z: 9 - Math.random() * 16,
@@ -1008,7 +1055,7 @@ if (onsenBox) {
     onShore(treePart, 0.74 * long, 8, T);
     const roomy = long > 105;
     lanternPart2.visible = treePart2.visible = roomy;
-    onShore(lanternPart2, 0.3 * long, 7, L);
+    onShore(lanternPart2, 0.08 * long, 7, L);
     onShore(treePart2, -0.33 * long, 9, T);
     // The new things on the shore; on a phone only the sign and the season's thing fit
     const ground = (part, x, back, lift = 3) => part.position.set(x, LEVEL + lift, shore(x) - back);
@@ -1016,6 +1063,8 @@ if (onsenBox) {
     ground(bucket, -0.45 * long, 0);
     ground(sign, wide ? 0.2 * long : 4, 6, 0);
     ground(seasonal, wide ? -0.24 * long : -4, 0);
+    // The waterfall right of the sign, in the gap between the monkeys; on a phone at the right
+    ground(fall, wide ? 0.4 * long : 0.62 * long, 1, -1);
     if (flyer) flyer.userData.home = new THREE.Vector3(wide ? 0.32 * long : -2, LEVEL + 8, 10);
     // Spread unevenly and at different distances from the shore; the fourth grown-up only on
     // very wide screens. On a phone, the one looking about and the little one.
@@ -1028,7 +1077,7 @@ if (onsenBox) {
       place(looker, -0.62 * long, 5);
       place(mother, -0.06 * long, 8);
       place(little, -0.06 * long + 15, 10);
-      place(dipper, 0.5 * long, 4);
+      place(dipper, 0.64 * long, 4);
       if (long > 105) place(away, 0.82 * long, 9);
     } else {
       place(looker, -10, 7);
@@ -1074,6 +1123,25 @@ if (onsenBox) {
       const x = (a * 2 - 1) * poolLong * 0.85;
       f.position.set(x, LEVEL - 0.2, u.z * 0.6 + 3);
       f.rotation.y = a * 20;
+    }
+    // The waterfall: water running down each step, foam spreading where it lands
+    const at = fall.position;
+    for (const d of fallDrops) {
+      const u = d.userData;
+      const p = reduceMotion ? u.at % 1 : (ft * u.speed + u.at) % 1;
+      d.position.set(at.x + u.x, at.y + u.top - p * u.height, at.z + u.z);
+    }
+    for (const { ring, mat, delay } of foam) {
+      ring.visible = !reduceMotion;
+      if (!ring.visible) continue;
+      const p = ((ft + delay) % 1.4) / 1.4;
+      const r = 2 + p * 5;
+      for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * Math.PI * 2;
+        ring.setMatrixAt(i, m4.makeTranslation(at.x + Math.cos(a) * r * 1.3, LEVEL - 0.3, at.z + 2 + Math.max(0, Math.sin(a)) * r * 0.7));
+      }
+      ring.instanceMatrix.needsUpdate = true;
+      mat.opacity = 0.75 * (1 - p);
     }
     // The butterfly or the dragonfly: wanders, flapping, or darts and hovers
     if (flyer && flyer.userData.home) {
