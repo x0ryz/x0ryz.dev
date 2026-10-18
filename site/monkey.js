@@ -1074,6 +1074,9 @@ if (onsenBox) {
     // Spread unevenly and at different distances from the shore; the fourth grown-up only on
     // very wide screens. On a phone, the one looking about and the little one.
     for (const m of soakers) m.g.visible = false;
+    // On a phone the one that looks about keeps still, facing you
+    looker.look = wide;
+    looker.g.rotation.y = 0.3;
     const place = (m, x, z) => {
       m.g.visible = true;
       m.g.position.set(x, m.g.position.y, z);
