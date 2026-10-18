@@ -2,7 +2,7 @@
 
 Personal site of Bohdan Barulin: a single static page with a voxel snow monkey in a hot spring.
 
-The monkey and its scene are built from code in [`site/monkey.js`](site/monkey.js) with three.js, no model files. The page follows the season (snow, sakura, bamboo or maple) and the light or dark theme. The monkey can be petted, shakes off the snowflakes and leaves that land on its head, and falls asleep in the water when nobody plays with it.
+The monkey and its scene are built from code in [`site/monkey.js`](site/monkey.js) with three.js, no model files. The page follows the season (snow, sakura, bamboo or maple) and the light or dark theme. The monkey looks at your pointer, follows you down the page in the corner once the intro scrolls away (where the window is wide enough), can be petted, shakes off the snowflakes and leaves that land on its head, and falls asleep in the water when nobody plays with it. Asleep, it peeks with one eye at a pointer close by.
 
 ## Layout
 

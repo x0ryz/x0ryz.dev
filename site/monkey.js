@@ -172,6 +172,21 @@ if (SEASON === "winter") {
   put(0, 27, -2, 0x7a3b1d);
 }
 
+// The head is its own part, so it can turn to look around: the head and cheek fur from the
+// chin up, the ears, and whatever sits on top
+const NECK = { y: 11, z: 0 };
+const inHead = (x, y, z) =>
+  y >= NECK.y &&
+  (y >= 17 ||
+    (x / 11) ** 2 + ((y - 14.5) / 5.5) ** 2 + ((z - 0.5) / 6.5) ** 2 <= 1 ||
+    (x / 9) ** 2 + ((y - 18) / 8.5) ** 2 + (z / 8) ** 2 <= 1);
+const head = new Map();
+for (const [k, c] of monkey) {
+  if (!inHead(...parse(k))) continue;
+  head.set(k, c);
+  monkey.delete(k);
+}
+
 // --- Scenery ---
 vox = scenery;
 
@@ -271,7 +286,13 @@ renderer.shadowMap.enabled = true;
 renderer.localClippingEnabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.domElement.setAttribute("aria-hidden", "true");
-box.appendChild(renderer.domElement);
+// The scene is drawn in a dock fixed to the window. It sits exactly over its place in the
+// intro, and once the intro scrolls away it shrinks into the corner and keeps you company,
+// where the window is wide enough to leave the corner free of text.
+const dock = document.createElement("div");
+dock.className = "monkey-dock";
+dock.appendChild(renderer.domElement);
+document.body.appendChild(dock);
 
 const scene = new THREE.Scene();
 const model = new THREE.Group();
@@ -343,9 +364,6 @@ function voxelMesh(map, solid = (x, y, z) => map.has(key(x, y, z))) {
 const poolFloor = [new THREE.Plane(new THREE.Vector3(0, 1, 0), 1.75)];
 const monkeyGroup = new THREE.Group();
 monkeyGroup.add(voxelMesh(monkey));
-const lidMesh = voxelMesh(lids, (x, y, z) => lids.has(key(x, y, z)) || monkey.has(key(x, y, z)));
-lidMesh.visible = false;
-monkeyGroup.add(lidMesh);
 // Parts that turn around a pivot: the mesh is offset back so the group sits at the pivot
 function pivoted(mesh, x, y, z) {
   const group = new THREE.Group();
@@ -354,13 +372,25 @@ function pivoted(mesh, x, y, z) {
   group.add(mesh);
   return group;
 }
+const headPart = pivoted(voxelMesh(head), 0, NECK.y, NECK.z);
+headPart.rotation.order = "YXZ";
+monkeyGroup.add(headPart);
+// A lid for each eye, so the monkey can peek with one eye while it sleeps
+const lidMeshes = [-1, 1].map((s) => {
+  const eye = new Map([...lids].filter(([k]) => Math.sign(parse(k)[0]) === s));
+  const mesh = voxelMesh(eye, (x, y, z) => eye.has(key(x, y, z)) || head.has(key(x, y, z)));
+  mesh.position.set(0, -NECK.y, -NECK.z);
+  mesh.visible = false;
+  headPart.add(mesh);
+  return mesh;
+});
 const armParts = [-1, 1].map((s) => {
   const part = pivoted(voxelMesh(arms.get(s)), s * SHOULDER.x, SHOULDER.y, SHOULDER.z);
   part.children[0].material.clippingPlanes = poolFloor;
   monkeyGroup.add(part);
   return part;
 });
-for (const mesh of monkeyGroup.children) if (mesh.material) mesh.material.clippingPlanes = poolFloor;
+monkeyGroup.traverse((mesh) => mesh.material && (mesh.material.clippingPlanes = poolFloor));
 model.add(monkeyGroup);
 model.add(voxelMesh(scenery));
 
@@ -448,15 +478,16 @@ const visitor = particle(
   { winter: C.snow, spring: 0xf6b6c9, summer: 0x7fae5e, autumn: 0xe0782c }[SEASON],
   0,
 );
-model.add(visitor);
-// The top of the head, over the snow cap in winter
-const HEAD_TOP = SEASON === "winter" ? 30 : 28.4;
+headPart.add(visitor);
+// The top of the head, over the snow cap in winter, from the neck
+const HEAD_TOP = (SEASON === "winter" ? 30 : 28.4) - NECK.y;
 const FALL = 2.5;
 const SIT = 4.5;
 const SHAKE = 0.8;
 let visit = -1;
 let perch = [0, 0];
 let fling = 1;
+let shake = 0;
 
 // Ripples that spread across the water when the monkey moves
 const RIPPLE_SEGMENTS = 56;
@@ -558,12 +589,44 @@ controls.maxPolarAngle = 1.35;
 function resize() {
   const s = box.clientWidth;
   renderer.setSize(s, s);
+  dock.style.width = dock.style.height = `${s}px`;
   const half = 14;
   Object.assign(camera, { left: -half, right: half, top: half, bottom: -half });
   camera.updateProjectionMatrix();
 }
-new ResizeObserver(resize).observe(box);
 resize();
+
+const DOCK = 200;
+const GAP = 16;
+const roomy = matchMedia("(min-width: 56rem) and (min-height: 30rem)");
+const firstBody = document.querySelector(".row .body");
+function canDock() {
+  if (reduceMotion || !roomy.matches || !firstBody) return false;
+  // Text keeps to the measure (42rem); the dock needs that much room to its right
+  const textEnd = firstBody.getBoundingClientRect().left + parseFloat(getComputedStyle(firstBody).fontSize) * 42;
+  return innerWidth - textEnd >= DOCK - 30;
+}
+let placing = false;
+function place() {
+  placing = false;
+  const r = box.getBoundingClientRect();
+  let [x, y, scale, p] = [r.left, r.top, 1, 0];
+  if (canDock()) {
+    // 0 while the intro's spot is in view, 1 once most of it has scrolled away
+    const q = Math.min(1, Math.max(0, -r.top / (r.height * 0.7)));
+    p = q * q * (3 - 2 * q);
+    x += (innerWidth - DOCK - GAP - x) * p;
+    y += (innerHeight - DOCK - GAP - y) * p;
+    scale += (DOCK / r.width - 1) * p;
+  }
+  dock.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  // On its way and in the corner it rides over the page, above the section rules
+  dock.classList.toggle("docked", p > 0);
+}
+const schedulePlace = () => placing || ((placing = true), requestAnimationFrame(place));
+addEventListener("scroll", schedulePlace, { passive: true });
+addEventListener("resize", schedulePlace);
+new ResizeObserver(() => (resize(), place())).observe(box);
 
 // Petting: a click on the monkey (not a drag), or Enter or Space when it has focus.
 // It shuts its eyes, sways, the water ripples and a heart floats up.
@@ -613,7 +676,41 @@ let wasAsleep = false;
 let sinkRipple = -1;
 const SINK = 8;
 let onScreen = true;
-new IntersectionObserver(([e]) => (onScreen = e.isIntersecting)).observe(box);
+new IntersectionObserver(([e]) => (onScreen = e.isIntersecting)).observe(dock);
+
+// Looking around: the head turns toward the pointer anywhere on the page, and back to the
+// laptop when the pointer rests for a few seconds or leaves the page
+const look = { x: 0, y: 0, at: -Infinity };
+const track = (e) => Object.assign(look, { x: e.clientX, y: e.clientY, at: now() });
+addEventListener("pointermove", track, { passive: true });
+addEventListener("pointerdown", track, { passive: true });
+document.documentElement.addEventListener("pointerleave", () => (look.at = -Infinity));
+const headCenter = new THREE.Vector3();
+const toViewer = new THREE.Vector3();
+const lookPlane = new THREE.Plane();
+const lookPoint = new THREE.Vector3();
+let yaw = 0;
+let pitch = 0;
+function lookAt() {
+  if (reduceMotion || now() - look.at > 4) return null;
+  const r = renderer.domElement.getBoundingClientRect();
+  pointer.set(((look.x - r.left) / r.width) * 2 - 1, -((look.y - r.top) / r.height) * 2 + 1);
+  raycaster.setFromCamera(pointer, camera);
+  // The pointer on a plane through the head, facing the viewer, then pulled toward the viewer,
+  // so the monkey looks out of the picture at it rather than sideways
+  monkeyGroup.localToWorld(headCenter.set(0, 18, 0));
+  camera.getWorldDirection(toViewer).negate();
+  lookPlane.setFromNormalAndCoplanarPoint(toViewer, headCenter);
+  if (!raycaster.ray.intersectPlane(lookPlane, lookPoint)) return null;
+  lookPoint.addScaledVector(toViewer, 12);
+  const d = monkeyGroup.worldToLocal(lookPoint).sub({ x: 0, y: 18, z: 0 });
+  return {
+    yaw: THREE.MathUtils.clamp(Math.atan2(d.x, d.z), -0.6, 0.6),
+    pitch: THREE.MathUtils.clamp(Math.atan2(d.y, Math.hypot(d.x, d.z)), -0.3, 0.35),
+    side: Math.sign(d.x) || 1,
+    near: Math.abs(pointer.x) < 1.4 && Math.abs(pointer.y) < 1.4,
+  };
+}
 
 const clock = new THREE.Clock();
 let t = 0;
@@ -688,7 +785,7 @@ renderer.setAnimationLoop(() => {
     visit += dt;
     if (asleep && visit < SIT) visit = SIT + SHAKE * 2;
     if (pet >= 0 && visit < SIT) visit = SIT;
-    const top = HEAD_TOP + monkeyGroup.position.y;
+    const top = HEAD_TOP;
     if (visit < FALL) {
       // Drifts down, swaying
       const p = visit / FALL;
@@ -701,14 +798,14 @@ renderer.setAnimationLoop(() => {
     } else {
       // The monkey shakes its head and the visitor flies off and fades
       const f = visit - SIT;
-      monkeyGroup.rotation.y = f < SHAKE ? Math.sin(f * 30) * 0.12 * (1 - f / SHAKE) : 0;
+      shake = f < SHAKE ? Math.sin(f * 30) * 0.2 * (1 - f / SHAKE) : 0;
       visitor.position.set(perch[0] + fling * f * 7, top + f * 6 - f * f * 9, perch[1] + f * 2);
       visitor.rotation.set(f * 8, f * 5, f * 6);
       visitor.material.opacity = Math.max(0, 1 - f / 1.3);
       if (f > 1.3) {
         visit = -1;
         lastActive = now();
-        monkeyGroup.rotation.y = 0;
+        shake = 0;
         nextVisit = now() + 25 + Math.random() * 20;
       }
     }
@@ -728,10 +825,22 @@ renderer.setAnimationLoop(() => {
     z.userData.mat.opacity = reduceMotion ? 0.8 : Math.sin(p * Math.PI) * 0.9;
   }
 
-  if (pet >= 0) lidMesh.visible = pet < 1.2;
-  else if (asleep) lidMesh.visible = true;
+  // Where the head looks: at the pointer, or down at the laptop. Asleep, it only lifts its head
+  // a little to peek at a pointer close by, with the eye on that side.
+  const want = lookAt();
+  const peek = asleep && want && want.near ? want.side : 0;
+  const follow = asleep ? (peek ? 0.5 : 0) : want ? 1 : 0;
+  const yawTo = follow ? want.yaw * follow : 0;
+  const pitchTo = follow ? want.pitch * follow : asleep ? -0.05 : -0.12;
+  const ease = Math.min(1, dt * (asleep ? 3 : 6));
+  yaw += (yawTo - yaw) * ease;
+  pitch += (pitchTo - pitch) * ease;
+  headPart.rotation.set(-pitch, yaw + shake, 0);
+
+  if (pet >= 0) for (const lid of lidMeshes) lid.visible = pet < 1.2;
+  else if (asleep) lidMeshes.forEach((lid, i) => (lid.visible = peek !== (i ? 1 : -1)));
   else if (!reduceMotion) {
-    lidMesh.visible = t > nextBlink && t < nextBlink + 0.14;
+    for (const lid of lidMeshes) lid.visible = t > nextBlink && t < nextBlink + 0.14;
     if (t > nextBlink + 0.14) nextBlink = t + 2.5 + Math.random() * 3.5;
   }
 
@@ -744,3 +853,4 @@ box.setAttribute("tabindex", "0");
 box.setAttribute("aria-label", "Pet the monkey");
 box.title = "Pet the monkey";
 box.classList.add("ready");
+dock.classList.add("ready");
