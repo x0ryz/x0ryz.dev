@@ -264,13 +264,20 @@ h2 {
 .onsen {
   position: relative;
   z-index: 0;
-  height: 15rem;
+  height: 17rem;
   margin-top: -9rem;
   pointer-events: none;
 }
 .onsen:not(.ready) { display: none; }
 .onsen { overflow: hidden; }
-.onsen canvas { display: block; width: 100%; height: 100%; }
+.onsen canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* The far ends of the scene fade into the page */
+  -webkit-mask-image: radial-gradient(ellipse 56% 80% at 50% 45%, #000 75%, transparent 100%);
+  mask-image: radial-gradient(ellipse 56% 80% at 50% 45%, #000 75%, transparent 100%);
+}
 
 /* 404 */
 .lost h1 {
