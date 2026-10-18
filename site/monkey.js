@@ -798,10 +798,9 @@ if (onsenBox) {
   const treePart = voxelMesh(
     lift((x, y, z, c) => near(x, z, T, 9) && TREE.has(c) && (c === BARK || y >= 6 || (SEASON === "summer" && STALKS.has(`${x},${z}`)))),
   );
-  // A second lantern and tree for very wide windows, sharing the first ones' meshes
-  const lanternPart2 = lanternPart.clone();
+  // A second tree for very wide windows, sharing the first one's mesh
   const treePart2 = new THREE.Mesh(treePart.geometry, treePart.material);
-  footScene.add(lanternPart, treePart, lanternPart2, treePart2);
+  footScene.add(lanternPart, treePart, treePart2);
 
   // Things around the spring, built from voxels like the rest: a wooden bucket and ladle,
   // a ♨ sign, and something of the season
@@ -815,6 +814,8 @@ if (onsenBox) {
     vox = map;
     if (slab) ellipsoid(0, -2, 0, slab, 2, slab - 0.5, () => C.rock[Math.floor(rand() * C.rock.length)]);
     make();
+    // Gaps left by sparse fills
+    for (const [k, c] of [...map]) if (c === undefined) map.delete(k);
     vox = monkey;
     return voxelMesh(map);
   };
@@ -902,44 +903,54 @@ if (onsenBox) {
   }
   footScene.add(bucket, sign, seasonal);
 
-  // Where the water comes from: a little waterfall pouring in one sheet over a rock ledge at
-  // the back into the pool, foaming where it lands
+  // Where the water comes from: a low waterfall. A stream runs out between two boulders,
+  // over a stone lip lower than the shore, and drops in one clear sheet into the pool; spray
+  // jumps and foam churns where it lands. It stands in front of the shore stones.
   const FALL_WATER = 0x8cc4e6;
-  // Lower than the shore stones: it pours out of a gap among them, in front of them
-  const LEDGES = [{ top: 2.5, z: 0 }];
+  const LIP = 3; // the top of the stream, from the ground
   const fall = build(() => {
     const stone = () => C.rock[Math.floor(rand() * C.rock.length)];
-    const { top, z } = LEDGES[0];
-    block(-5, 5, -3, top, z - 6, z, stone);
-    block(-4, 4, -3, top + 1.5, z - 9, z - 6, stone);
-    // The stream running over the ledge to its lip
-    block(-3, 3, top + 1, top + 1, z - 8, z, FALL_WATER);
-    ellipsoid(-6, 1, -2.5, 2.5, 3.5, 3.5, stone);
-    ellipsoid(6, 0.5, -2, 2.5, 3, 3.5, stone);
-    if (SEASON === "winter") {
-      ellipsoid(-6, 4.5, -2.5, 2, 0.6, 2.5, C.snow);
-      ellipsoid(6, 3.5, -2, 2, 0.6, 2.5, C.snow);
-    }
+    ellipsoid(0, 0, -6, 7, 4, 3.5, stone);
+    ellipsoid(-6, 0.5, -2, 3, 3.5, 3.5, stone);
+    ellipsoid(6, 0, -1.5, 3, 3, 3.5, stone);
+    block(-3, 3, -3, LIP - 1, -4, 0, stone);
+    block(-3, 3, LIP, LIP, -5, 0, FALL_WATER);
+    // The season on the boulders: snow in winter, a little moss, petals or leaves otherwise
+    for (const [x, y, z] of [[-6, 4, -2], [6, 3, -1.5], [0, 4, -6]])
+      ellipsoid(x, y, z, 2, 0.6, 2.2, SEASON === "winter" ? C.snow : () => (rand() < 0.35 ? S.ground[Math.floor(rand() * S.ground.length)] : undefined));
   }, 0);
-  // Falling water: columns of cubes running down each step, lighter and darker in turn
-  const fallMat = new THREE.MeshLambertMaterial({ color: 0xd6ecf7, transparent: true, opacity: 0.9, depthWrite: false });
+  // The sheet of water: a pale see-through curtain with brighter streaks running down it
+  const curtain = new THREE.Mesh(
+    new THREE.BoxGeometry(7, LIP + 0.4, 0.25),
+    new THREE.MeshLambertMaterial({ color: 0xa9d6ef, transparent: true, opacity: 0.6, depthWrite: false }),
+  );
+  const streakMat = new THREE.MeshLambertMaterial({ color: 0xeef7fc, transparent: true, opacity: 0.95, depthWrite: false });
   const fallDrops = [];
-  LEDGES.forEach(({ top, z }, i) => {
-    const below = i < LEDGES.length - 1 ? LEDGES[i + 1].top + 1 : 0;
-    for (let x = -3; x <= 3; x++)
-      for (let k = 0; k < 5; k++) {
-        const d = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 0.5), fallMat);
-        d.userData = { x, z: z + 0.8, top: top + 1, height: top + 1 - below, at: k / 5 + Math.random() * 0.15, speed: 0.9 + Math.random() * 0.3 };
-        footScene.add(d);
-        fallDrops.push(d);
-      }
+  for (let x = -3; x <= 3; x++)
+    for (let k = 0; k < 4; k++) {
+      const d = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.3, 0.35), streakMat);
+      d.userData = { x: x + (Math.random() - 0.5) * 0.4, at: k / 4 + Math.random() * 0.15, speed: 1 + Math.random() * 0.4 };
+      footScene.add(d);
+      fallDrops.push(d);
+    }
+  // Spray hopping up where the sheet lands, and foam churning on the water there
+  const whiteMat = new THREE.MeshLambertMaterial({ color: 0xf6fbfe, transparent: true, opacity: 0.9, depthWrite: false });
+  const spray = Array.from({ length: 12 }, () => {
+    const d = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), whiteMat);
+    d.userData = { p: Math.random() };
+    footScene.add(d);
+    return d;
   });
-  const foam = [0, 0.7].map((delay) => {
-    const mat = new THREE.MeshBasicMaterial({ color: 0xf4fbff, transparent: true, opacity: 0, depthWrite: false });
-    const ring = new THREE.InstancedMesh(new THREE.BoxGeometry(0.8, 0.2, 0.8), mat, 24);
-    footScene.add(ring);
-    return { ring, mat, delay };
+  const hop = (d) =>
+    Object.assign(d.userData, { x: (Math.random() - 0.5) * 7, z: 1 + Math.random() * 1.5, h: 0.8 + Math.random(), out: (Math.random() - 0.5) * 2, speed: 1.1 + Math.random() * 0.8 });
+  spray.forEach(hop);
+  const foam = Array.from({ length: 14 }, () => {
+    const d = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 0.9), whiteMat);
+    d.userData = { x: (Math.random() - 0.5) * 8.5, z: 1 + Math.random() * 2.5, phase: Math.random() * 6 };
+    footScene.add(d);
+    return d;
   });
+  footScene.add(curtain);
   footScene.add(fall);
   darkScheme.addEventListener("change", syncLight);
   syncLight();
@@ -1051,8 +1062,7 @@ if (onsenBox) {
     onShore(lanternPart, -0.72 * long, 7, L);
     onShore(treePart, 0.74 * long, 8, T);
     const roomy = long > 105;
-    lanternPart2.visible = treePart2.visible = roomy;
-    onShore(lanternPart2, 0.08 * long, 7, L);
+    treePart2.visible = roomy;
     onShore(treePart2, -0.33 * long, 9, T);
     // The new things on the shore; on a phone only the sign and the season's thing fit
     const ground = (part, x, back, lift = 3) => part.position.set(x, LEVEL + lift, shore(x) - back);
@@ -1121,24 +1131,31 @@ if (onsenBox) {
       f.position.set(x, LEVEL - 0.2, u.z * 0.6 + 3);
       f.rotation.y = a * 20;
     }
-    // The waterfall: water running down each step, foam spreading where it lands
+    // The waterfall: streaks running down the sheet, spray hopping, foam churning
     const at = fall.position;
+    const surface = 0.6; // the pool's surface, from the ground
+    curtain.position.set(at.x, at.y + (LIP + surface) / 2, at.z + 0.7);
     for (const d of fallDrops) {
       const u = d.userData;
       const p = reduceMotion ? u.at % 1 : (ft * u.speed + u.at) % 1;
-      d.position.set(at.x + u.x, at.y + u.top - p * u.height, at.z + u.z);
+      d.position.set(at.x + u.x, at.y + LIP - p * (LIP - surface), at.z + 0.75);
     }
-    for (const { ring, mat, delay } of foam) {
-      ring.visible = !reduceMotion;
-      if (!ring.visible) continue;
-      const p = ((ft + delay) % 1.4) / 1.4;
-      const r = 2 + p * 5;
-      for (let i = 0; i < 24; i++) {
-        const a = (i / 24) * Math.PI * 2;
-        ring.setMatrixAt(i, m4.makeTranslation(at.x + Math.cos(a) * r * 1.3, LEVEL - 0.3, at.z + 2 + Math.max(0, Math.sin(a)) * r * 0.7));
+    for (const d of spray) {
+      const u = d.userData;
+      d.visible = !reduceMotion;
+      if (reduceMotion) continue;
+      u.p += dt * u.speed;
+      if (u.p >= 1) {
+        u.p -= 1;
+        hop(d);
       }
-      ring.instanceMatrix.needsUpdate = true;
-      mat.opacity = 0.75 * (1 - p);
+      d.position.set(at.x + u.x + u.out * u.p, at.y + surface + u.h * Math.sin(u.p * Math.PI), at.z + u.z);
+    }
+    for (const d of foam) {
+      const u = d.userData;
+      const wobble = reduceMotion ? 0 : Math.sin(ft * 5 + u.phase);
+      d.position.set(at.x + u.x + wobble * 0.15, at.y + surface + 0.1, at.z + u.z);
+      d.scale.set(1 + wobble * 0.25, 1, 1 - wobble * 0.25);
     }
     // The butterfly or the dragonfly: wanders, flapping, or darts and hovers
     if (flyer && flyer.userData.home) {
