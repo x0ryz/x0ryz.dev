@@ -747,8 +747,13 @@ if (onsenBox) {
     boulder(Math.round(x), -15 + Math.round(rand() * 3 - 1.5), 2.5 + rand() * 2, LEVEL + 1.5 + rand() * 4, 2.5 + rand() * 1.5);
     if (rand() < 0.3) boulder(Math.round(x + 2), -19, 3 + rand() * 2, LEVEL + 4 + rand() * 4, 3);
   }
-  for (let x = -LONG / 2; x <= LONG / 2; x += 7 + rand() * 6)
-    boulder(Math.round(x), 14, 1.5 + rand() * 2, LEVEL + rand(), 1.5 + rand());
+  // The front edge: low rounded stones of all sizes, overlapping in two staggered rows at
+  // uneven distances from the water, so it reads as a pool's edge rather than a wall
+  for (const [z0, step, size] of [[14, 3, 1], [17, 4, 1.3]])
+    for (let x = -LONG / 2 + rand() * step; x <= LONG / 2; x += step + rand() * step) {
+      const rx = (2 + rand() * 2.2) * size;
+      boulder(Math.round(x), z0 + Math.round(rand() * 2 - 1), rx, LEVEL + rand() * 1.4, 1.8 + rand() * 1.2);
+    }
   season(rim);
   const heap = new Map();
   vox = heap;
@@ -777,8 +782,12 @@ if (onsenBox) {
   lanternGlow.position.set(L.x, 10, L.z);
   const lanternPart = new THREE.Group();
   lanternPart.add(lantern, lanternWindows, lanternGlow);
+  // The whole trunk (or bamboo stalks) down to the rocks, and the leaves above the ground cover
   const TREE = new Set([BARK, ...(S.canopy || []), 0x5c8746, 0x7fae5e, 0x6d9a52]);
-  const treePart = voxelMesh(lift((x, y, z, c) => near(x, z, T, 9) && y >= 6 && TREE.has(c)));
+  const STALKS = new Set(["10,-14", "13,-12", "14,-16"]);
+  const treePart = voxelMesh(
+    lift((x, y, z, c) => near(x, z, T, 9) && TREE.has(c) && (c === BARK || y >= 6 || (SEASON === "summer" && STALKS.has(`${x},${z}`)))),
+  );
   footScene.add(lanternPart, treePart);
   darkScheme.addEventListener("change", syncLight);
   syncLight();
@@ -818,8 +827,8 @@ if (onsenBox) {
   footSteam.forEach((s) => s.material.color.setHex(steamColor()));
 
   const footCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
-  footCam.position.set(14, 40, 90);
-  footCam.lookAt(0, LEVEL + 11, 0);
+  footCam.position.set(14, 62, 90);
+  footCam.lookAt(0, LEVEL + 16, 0);
   const HALF = 19;
   let span = 0; // half the width of the pool in view
   function fit() {
