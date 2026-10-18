@@ -832,25 +832,6 @@ if (onsenBox) {
   const littles = [soaker(0.55, -0.5, false), soaker(0.55, 0.5, false)];
   const soakers = [...adults, ...littles];
 
-  // One monkey sits up on a rock out in the water, arms and all, like the one at the top
-  const perch = new Map();
-  vox = perch;
-  ellipsoid(0, LEVEL - 2, 0, 8.5, 6.5, 6.5, () => C.rock[Math.floor(rand() * C.rock.length)]);
-  ellipsoid(5, LEVEL - 2, 3, 4, 4, 3.5, () => C.rock[Math.floor(rand() * C.rock.length)]);
-  if (SEASON === "winter") ellipsoid(-3, LEVEL + 4.3, -2, 4, 0.8, 3, C.snow);
-  vox = monkey;
-  const perchRock = voxelMesh(perch);
-  const percher = new THREE.Group();
-  const percherLid = new THREE.Mesh(lidMesh.geometry, lidMat);
-  percher.add(new THREE.Mesh(body.geometry, bodyMat), percherLid, ...armParts.map((arm) => arm.clone()));
-  percher.scale.setScalar(0.85);
-  // Its bottom (y = -5 in the model) rests on the top of the rock
-  percher.position.y = LEVEL + 3.8 + 5 * 0.85;
-  percher.rotation.y = -0.25;
-  const sitter = new THREE.Group();
-  sitter.add(perchRock, percher);
-  footScene.add(sitter);
-
   const footSteam = Array.from({ length: 26 }, (_, i) => {
     const s = particle(1.4 + (i % 3) * 0.5, 0xffffff, 0);
     s.userData = { t: i / 12, x: 0 };
@@ -920,9 +901,6 @@ if (onsenBox) {
     const middle = adults[Math.floor((count - 1) / 2)].g.position.x;
     place(littles[0], middle + (wide ? 17 : 21));
     if (count >= 5) place(littles[1], adults[count - 1].g.position.x - 20);
-    // The rock sits in the gap between the first two grown-ups, a little further out than them
-    sitter.visible = wide;
-    if (wide) sitter.position.set((adults[0].g.position.x + adults[1].g.position.x) / 2, 0, 2);
     footSteam.forEach((s, i) => (s.userData.x = (-0.9 + (1.8 * (i + 0.5)) / footSteam.length) * long + Math.sin(i * 7) * 3));
     draw(0);
   }
@@ -931,7 +909,6 @@ if (onsenBox) {
   let ft = 0;
   function draw(dt) {
     ft += dt;
-    percherLid.visible = !reduceMotion && (ft + 1.7) % 4.3 < 0.14;
     for (const m of soakers) {
       m.g.position.y = m.base + (reduceMotion ? 0 : Math.sin(ft * 0.9 + m.phase) * 0.35);
       if (!m.sleepy) m.lid.visible = !reduceMotion && (ft + m.phase) % m.blink < 0.14;
