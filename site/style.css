@@ -259,6 +259,18 @@ h2 {
 }
 .side .kind { margin-top: 0.25rem; color: var(--muted); }
 
+/* The hot spring at the foot of the page, drawn by onsen.js. It reaches up behind the
+   contact section, so the steam rises behind the links; without the script it takes no room. */
+.onsen {
+  position: relative;
+  z-index: 0;
+  height: 15rem;
+  margin-top: -9rem;
+  pointer-events: none;
+}
+.onsen:not(.ready) { display: none; }
+.onsen canvas { display: block; width: 100%; height: 100%; }
+
 /* 404 */
 .lost h1 {
   font-weight: 800;
@@ -272,7 +284,7 @@ h2 {
 @media print {
   :root, :root[data-season] { --paper: #fff; --ink: #000; --muted: #444; --rule: #bbb; --link: #000; }
   .feature h2 { font-size: 18pt; }
-  .season-bg, .monkey3d, .clock { display: none !important; }
+  .season-bg, .monkey3d, .clock, .onsen { display: none !important; }
   body { font-size: 11pt; }
   main { max-width: none; padding: 0; }
   .intro h1 { font-size: 32pt; white-space: normal; }

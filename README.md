@@ -11,6 +11,7 @@ The monkey and its scene are built from code in [`site/monkey.js`](site/monkey.j
   - `season-pick.js` picks the season from the date before the page paints (`?season=spring|summer|autumn|winter` previews one)
   - `monkey.js` builds and animates the 3D scene; it is the readable source of `monkey.min.js`, which the pages load
   - `season.js` draws the falling snow, petals or leaves over the page
+  - `onsen.js` draws the hot spring at the foot of the page: water, rocks, steam, and petals or leaves on the water
   - `page.js` loads the scene once the page is idle, and runs the clock in Lutsk
   - `og-<season>.png` are the link preview images, one per season
   - `_headers` sets the security headers (a strict Content-Security-Policy: every script and style comes from this site)
