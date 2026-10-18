@@ -795,7 +795,10 @@ if (onsenBox) {
   const treePart = voxelMesh(
     lift((x, y, z, c) => near(x, z, T, 9) && TREE.has(c) && (c === BARK || y >= 6 || (SEASON === "summer" && STALKS.has(`${x},${z}`)))),
   );
-  footScene.add(lanternPart, treePart);
+  // A second lantern and tree for very wide windows, sharing the first ones' meshes
+  const lanternPart2 = lanternPart.clone();
+  const treePart2 = new THREE.Mesh(treePart.geometry, treePart.material);
+  footScene.add(lanternPart, treePart, lanternPart2, treePart2);
   darkScheme.addEventListener("change", syncLight);
   syncLight();
 
@@ -819,9 +822,14 @@ if (onsenBox) {
     // Placed so the water line falls at the same height on the monkey at any size
     return { g, lid, sleepy, base: LEVEL * (1 - scale) - (sleepy ? 2 : 0), phase: Math.random() * 6, blink: 2 + Math.random() * 4 };
   };
-  const soakers = [soaker(1, 0.35, false), soaker(1, 0.1, true), soaker(0.55, -0.5, false), soaker(1, -0.3, false)];
+  // Grown-ups, as many as the width has room for, and two little ones
+  const adults = [[0.35, false], [0.1, true], [-0.3, false], [0.25, false], [-0.15, true], [-0.35, false]].map(([turn, sleepy]) =>
+    soaker(1, turn, sleepy),
+  );
+  const littles = [soaker(0.55, -0.5, false), soaker(0.55, 0.5, false)];
+  const soakers = [...adults, ...littles];
 
-  const footSteam = Array.from({ length: 18 }, (_, i) => {
+  const footSteam = Array.from({ length: 26 }, (_, i) => {
     const s = particle(1.4 + (i % 3) * 0.5, 0xffffff, 0);
     s.userData = { t: i / 12, x: 0 };
     footScene.add(s);
@@ -868,18 +876,29 @@ if (onsenBox) {
     }
     // The lantern and the tree stand on the shore, toward the ends
     const shore = pool.userData.shore;
-    lanternPart.position.set(-0.72 * long - L.x, LEVEL - 1, shore(-0.72 * long) - 7 - L.z);
-    treePart.position.set(0.74 * long - T.x, LEVEL - 1, shore(0.74 * long) - 8 - T.z);
-    // Three monkeys and the little one on a wide page, one and the little one on a phone.
-    // The little one sits beside a grown-up with a gap between them, turned toward it.
-    const at = wide ? [-0.55 * span, -4, 17, 0.55 * span] : [-10, null, 11, null];
-    soakers.forEach((m, i) => {
-      m.g.visible = at[i] !== null;
-      m.g.position.x = at[i] ?? 0;
+    const onShore = (part, x, back, at) => part.position.set(x - at.x, LEVEL - 1, shore(x) - back - at.z);
+    onShore(lanternPart, -0.72 * long, 7, L);
+    onShore(treePart, 0.74 * long, 8, T);
+    const roomy = long > 105;
+    lanternPart2.visible = treePart2.visible = roomy;
+    onShore(lanternPart2, 0.3 * long, 7, L);
+    onShore(treePart2, -0.33 * long, 9, T);
+    // Grown-ups about 46 units apart across the pool (one on a phone), and a little one beside
+    // the middle one, with a gap between them, turned toward it; a second little one when
+    // there are five or more grown-ups
+    for (const m of soakers) m.g.visible = false;
+    const count = wide ? Math.max(3, Math.min(adults.length, Math.floor((1.7 * long) / 46) + 1)) : 1;
+    const step = count > 1 ? (1.7 * long) / (count - 1) : 0;
+    const place = (m, x) => {
+      m.g.visible = true;
       // Out in the water, clear of the stones along the shore
-      m.g.position.z = 7;
-    });
-    footSteam.forEach((s, i) => (s.userData.x = (-0.85 + (1.7 * (i + 0.5)) / footSteam.length) * long + Math.sin(i * 7) * 3));
+      m.g.position.set(x, m.g.position.y, 7);
+    };
+    for (let i = 0; i < count; i++) place(adults[i], count > 1 ? -0.85 * long + i * step : -10);
+    const middle = adults[Math.floor((count - 1) / 2)].g.position.x;
+    place(littles[0], middle + (wide ? 17 : 21));
+    if (count >= 5) place(littles[1], adults[count - 1].g.position.x - 20);
+    footSteam.forEach((s, i) => (s.userData.x = (-0.9 + (1.8 * (i + 0.5)) / footSteam.length) * long + Math.sin(i * 7) * 3));
     draw(0);
   }
 
