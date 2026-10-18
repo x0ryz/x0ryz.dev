@@ -603,7 +603,8 @@ const firstBody = document.querySelector(".row .body");
 function canDock() {
   if (reduceMotion || !roomy.matches || !firstBody) return false;
   // Text keeps to the measure (42rem); the dock needs that much room to its right
-  const textEnd = firstBody.getBoundingClientRect().left + parseFloat(getComputedStyle(firstBody).fontSize) * 42;
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const textEnd = firstBody.getBoundingClientRect().left + rem * 42;
   return innerWidth - textEnd >= DOCK - 30;
 }
 let placing = false;
