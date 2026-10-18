@@ -721,41 +721,35 @@ if (onsenBox) {
   };
 
 
-  // The pool: an oval of water sunk into stony ground, so no edge of it is ever cut off.
-  // Stones ring the water, low and sparse at the front and taller at the back; the ground
-  // carries the season (snow in winter, a scatter of petals, moss or leaves otherwise) and
-  // fades into the page at its edges (see .onsen canvas in style.css). It is rebuilt to the
-  // width of the window from the same seed, so nothing jumps when the window is resized.
+  // The pool: water all across the front, running out past the bottom of the page as if you
+  // stood in it, and a shore only at the back, curving gently away at both ends. Stones line
+  // the shore and stony ground lies behind them, carrying the season (snow in winter, a
+  // scatter of petals, moss or leaves otherwise). The ends fade into the page (see
+  // .onsen canvas in style.css). It is rebuilt to the width of the window from the same seed,
+  // so nothing jumps when the window is resized.
   const GROUND = { winter: [C.snow, 0xeef1f5, 0xe2e7ee] }[SEASON] || [0x9a9fa6, 0x8d9097, 0xa6abb1];
   function buildPool(long) {
     let seed = 7;
     const r = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
     const pick = (list) => list[Math.floor(r() * list.length)];
+    // Where the shore is, from left to right: furthest back in the middle
+    const shore = (x) => -DEEP * Math.sqrt(Math.max(0, 1 - (x / (long + 25)) ** 2)) - 2;
     const map = new Map();
     vox = map;
-    // How far a point is out of the oval: below 1 is water
-    const out = (x, z, grow = 0) => Math.hypot(x / (long + grow), z / (DEEP + grow));
-    // The ground is a ragged ring around the water, like the island the monkey sits on at the top
-    for (let x = -long - 14; x <= long + 14; x++)
-      for (let z = -DEEP - 14; z <= DEEP + 14; z++) {
-        if (out(x, z, 1) < 1 || out(x, z, 6 + r() * 4) > 1) continue;
+    for (let x = -long - 30; x <= long + 30; x++) {
+      const edge = Math.round(shore(x));
+      const depth = 9 + Math.floor(r() * 4);
+      for (let z = edge - depth; z <= edge; z++) {
         const sprinkle = SEASON !== "winter" && r() < S.cells * 0.12;
         put(x, LEVEL - 1, z, sprinkle ? pick(S.ground) : pick(GROUND));
-        // A little thickness under the ground, so its edge isn't a paper sheet
         for (let y = LEVEL - 4; y < LEVEL - 1; y++) put(x, y, z, pick(C.rock));
       }
+    }
     const boulder = (cx, cz, rx, top, rz) =>
       ellipsoid(Math.round(cx), LEVEL - 1, Math.round(cz), rx, top - LEVEL + 1, rz, () => pick(C.rock));
-    for (let t = 0; t < Math.PI * 2; ) {
-      const back = -Math.sin(t); // 1 at the back, -1 at the front
-      if (back > -0.2 || r() < 0.45) {
-        const height = back > 0 ? 1.5 + back * 3.5 + r() * 2.5 : 0.4 + r() * 0.9;
-        const size = back > 0 ? 2.4 + r() * 2 + back : 1.4 + r() * 1.4;
-        boulder((long + 2) * Math.cos(t), (DEEP + 2) * Math.sin(t), size, LEVEL + height, back > 0 ? 2 + r() * 1.5 : 1.3 + r());
-      }
-      if (back > 0.3 && r() < 0.35)
-        boulder((long + 6) * Math.cos(t), (DEEP + 6) * Math.sin(t), 3 + r() * 2, LEVEL + 4 + r() * 4, 3);
-      t += (back > 0 ? 2.6 + r() * 1.6 : 4 + r() * 4) / Math.hypot(long * Math.sin(t), DEEP * Math.cos(t));
+    for (let x = -long - 30; x <= long + 30; x += 2.6 + r() * 2) {
+      boulder(x, shore(x) - r() * 2, 2.4 + r() * 2, LEVEL + 2 + r() * 3.5, 2 + r() * 1.5);
+      if (r() < 0.35) boulder(x + 2, shore(x) - 5, 3 + r() * 2, LEVEL + 4.5 + r() * 4, 3);
     }
     // The season on some of the stones, sparser than at the top
     const tops = new Map();
@@ -769,12 +763,12 @@ if (onsenBox) {
       map.set(key(x, y + 1, z), pick(S.ground));
     }
     vox = monkey;
-    // Just the surface, level with the ground: there are no sides to show
-    const water = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 96), footWater);
-    water.scale.set(long + 1.5, 1, DEEP + 1.5);
-    water.position.y = LEVEL - 0.6;
+    // One sheet of water from under the shore to well past the bottom of the view
+    const water = new THREE.Mesh(new THREE.BoxGeometry(2 * long + 90, 1, 140), footWater);
+    water.position.set(0, LEVEL - 0.9, 70 - DEEP - 4);
     const part = new THREE.Group();
     part.add(water, voxelMesh(map));
+    part.userData.shore = shore;
     return part;
   }
   let pool = null;
@@ -870,10 +864,10 @@ if (onsenBox) {
       poolLong = long;
       footScene.add(pool);
     }
-    // The lantern and the tree stand behind the rounded ends of the pool
-    const behind = (x) => -(DEEP + 2) * Math.sqrt(1 - (x / (long + 2)) ** 2) - 6;
-    lanternPart.position.set(-0.72 * long - L.x, LEVEL - 1, behind(0.72 * long) - L.z);
-    treePart.position.set(0.74 * long - T.x, LEVEL - 1, behind(0.74 * long) - T.z);
+    // The lantern and the tree stand on the shore, toward the ends
+    const shore = pool.userData.shore;
+    lanternPart.position.set(-0.72 * long - L.x, LEVEL - 1, shore(-0.72 * long) - 7 - L.z);
+    treePart.position.set(0.74 * long - T.x, LEVEL - 1, shore(0.74 * long) - 8 - T.z);
     // Three monkeys and the little one on a wide page, one and the little one on a phone.
     // The little one sits beside a grown-up with a gap between them, turned toward it.
     const at = wide ? [-0.55 * span, -4, 17, 0.55 * span] : [-10, null, 11, null];
@@ -903,7 +897,7 @@ if (onsenBox) {
       const a = (u.at + (reduceMotion ? 0 : ft * u.speed)) % 1;
       // Drifting along the oval, never over its rim
       const x = (a * 2 - 1) * poolLong * 0.85;
-      f.position.set(x, LEVEL + 0.2, (u.z / 10) * (DEEP - 2) * Math.sqrt(1 - (x / poolLong) ** 2));
+      f.position.set(x, LEVEL - 0.2, u.z * 0.6 + 3);
       f.rotation.y = a * 20;
     }
     foot.render(footScene, footCam);
