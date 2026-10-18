@@ -3,7 +3,7 @@
 
 // The scene is decoration, so it loads once the page has settled
 if (document.querySelector(".monkey3d")) {
-  const load = () => import("/monkey.min.js?v=8e515d76");
+  const load = () => import("/monkey.min.js");
   "requestIdleCallback" in window ? requestIdleCallback(load, { timeout: 2000 }) : setTimeout(load, 300);
 }
 

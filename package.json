@@ -1,8 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "build": "esbuild site/monkey.js --bundle --minify --format=esm --alias:three/addons=three/examples/jsm --outfile=site/monkey.min.js && node scripts/stamp.mjs",
-    "stamp": "node scripts/stamp.mjs"
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/build.mjs && python3 -m http.server -d dist 8000"
   },
   "devDependencies": {
     "esbuild": "0.23.1",
