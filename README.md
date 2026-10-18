@@ -2,7 +2,7 @@
 
 Personal site of Bohdan Barulin: a single static page with a voxel snow monkey in a hot spring.
 
-The monkey and its scene are built from code in [`site/monkey.js`](site/monkey.js) with three.js, no model files. The page follows the season (snow, sakura, bamboo or maple) and the light or dark theme. The monkey can be petted, and it falls asleep in the water when nobody plays with it.
+The monkey and its scene are built from code in [`site/monkey.js`](site/monkey.js) with three.js, no model files. The page follows the season (snow, sakura, bamboo or maple) and the light or dark theme. The monkey can be petted, shakes off the snowflakes and leaves that land on its head, and falls asleep in the water when nobody plays with it.
 
 ## Layout
 
@@ -11,7 +11,11 @@ The monkey and its scene are built from code in [`site/monkey.js`](site/monkey.j
   - `season-pick.js` picks the season from the date before the page paints (`?season=spring|summer|autumn|winter` previews one)
   - `monkey.js` builds and animates the 3D scene; it is the readable source of `monkey.min.js`, which the pages load
   - `season.js` draws the falling snow, petals or leaves over the page
+  - `page.js` loads the scene once the page is idle, and runs the email copy buttons and the clock in Lutsk
+  - `og-<season>.png` are the link preview images, one per season
+  - `_headers` sets the security headers (a strict Content-Security-Policy: every script and style comes from this site)
   - `fonts/` is Onest, under the SIL Open Font License
+- `functions/og.png.js` is a Cloudflare Pages Function: `/og.png` serves the current season's preview image.
 - `cv/resume_en.yaml` is the source of `site/Bohdan_Barulin_CV.pdf`, in [RenderCV](https://rendercv.com) format.
 
 ## Run locally
@@ -20,7 +24,7 @@ The monkey and its scene are built from code in [`site/monkey.js`](site/monkey.j
 python3 -m http.server -d site 8000
 ```
 
-Then open <http://localhost:8000>. This simple server shows its own 404 page instead of `site/404.html`; Cloudflare Pages uses ours.
+Then open <http://localhost:8000>. This simple server shows its own 404 page instead of `site/404.html`; Cloudflare Pages uses ours. `/og.png`, the headers and the 404 page only work under Cloudflare Pages, or locally with `npx wrangler pages dev site`.
 
 ## Rebuild the scene
 

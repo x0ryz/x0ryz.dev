@@ -26,11 +26,7 @@
       </div>
     </header>
   </main>
-  <script type="module">
-    // The scene is decoration, so it loads once the page has settled
-    const load = () => import("/monkey.min.js");
-    "requestIdleCallback" in window ? requestIdleCallback(load, { timeout: 2000 }) : setTimeout(load, 300);
-  </script>
+  <script src="/page.js"></script>
   <script src="/season.js"></script>
 </body>
 </html>

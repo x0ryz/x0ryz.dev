@@ -439,6 +439,24 @@ const floaters = (S.float || []).flatMap((color) =>
   }),
 );
 
+// Now and then something lands on the monkey's head: a snowflake, a petal or a leaf.
+// It sits there for a moment, then the monkey shakes it off.
+const visitor = particle(
+  SEASON === "winter" ? 1.4 : [2, 0.4, 1.6],
+  { winter: C.snow, spring: 0xf6b6c9, summer: 0x7fae5e, autumn: 0xe0782c }[SEASON],
+  0,
+);
+model.add(visitor);
+// The top of the head, over the snow cap in winter
+const HEAD_TOP = SEASON === "winter" ? 30 : 28.4;
+const FALL = 2.5;
+const SIT = 4.5;
+const SHAKE = 0.8;
+let visit = -1;
+let nextVisit = 15 + Math.random() * 15;
+let perch = [0, 0];
+let fling = 1;
+
 // Ripples that spread across the water when the monkey moves
 const RIPPLE_SEGMENTS = 56;
 const ripples = [0, 0.35].map((delay) => {
@@ -655,6 +673,41 @@ renderer.setAnimationLoop(() => {
     }
   }
   for (const arm of armParts) arm.rotation.x = 1.0 * rest;
+
+  // A visitor on the head: it falls, sits, and is shaken off (or knocked off by a pat)
+  if (visit < 0 && !reduceMotion && !asleep && pet < 0 && t > nextVisit) {
+    visit = 0;
+    perch = [(Math.random() - 0.5) * 5, (Math.random() - 0.5) * 3];
+    fling = Math.random() < 0.5 ? -1 : 1;
+  }
+  if (visit >= 0) {
+    visit += dt;
+    if (asleep && visit < SIT) visit = SIT + SHAKE * 2;
+    if (pet >= 0 && visit < SIT) visit = SIT;
+    const top = HEAD_TOP + monkeyGroup.position.y;
+    if (visit < FALL) {
+      // Drifts down, swaying
+      const p = visit / FALL;
+      visitor.position.set(perch[0] + Math.sin(p * 7) * 1.5 * (1 - p), top + 14 * (1 - p), perch[1]);
+      visitor.rotation.set(Math.sin(p * 9) * 0.6 * (1 - p), p * 3, 0);
+      visitor.material.opacity = Math.min(1, p * 4);
+    } else if (visit < SIT) {
+      visitor.position.set(perch[0], top, perch[1]);
+      visitor.rotation.set(0, 3, 0);
+    } else {
+      // The monkey shakes its head and the visitor flies off and fades
+      const f = visit - SIT;
+      monkeyGroup.rotation.y = f < SHAKE ? Math.sin(f * 30) * 0.12 * (1 - f / SHAKE) : 0;
+      visitor.position.set(perch[0] + fling * f * 7, top + f * 6 - f * f * 9, perch[1] + f * 2);
+      visitor.rotation.set(f * 8, f * 5, f * 6);
+      visitor.material.opacity = Math.max(0, 1 - f / 1.3);
+      if (f > 1.3) {
+        visit = -1;
+        monkeyGroup.rotation.y = 0;
+        nextVisit = t + 25 + Math.random() * 20;
+      }
+    }
+  }
   // The screen light flickers a little, like a page scrolling, and goes out with the lid
   screenLight.intensity = screenGlow * (1 - rest) * (reduceMotion ? 1 : 0.9 + 0.1 * Math.sin(t * 7) * Math.sin(t * 2.3));
   // Breathing: quick and shallow while awake, slow and deep while asleep
