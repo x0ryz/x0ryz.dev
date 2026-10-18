@@ -876,6 +876,8 @@ if (onsenBox) {
     soakers.forEach((m, i) => {
       m.g.visible = at[i] !== null;
       m.g.position.x = at[i] ?? 0;
+      // Out in the water, clear of the stones along the shore
+      m.g.position.z = 7;
     });
     footSteam.forEach((s, i) => (s.userData.x = (-0.85 + (1.7 * (i + 0.5)) / footSteam.length) * long + Math.sin(i * 7) * 3));
     draw(0);
