@@ -1,26 +1,10 @@
-// Small things on the page that need a script: the scene, the copy buttons and the clock.
+// Small things on the page that need a script: the scene and the clock.
 // Without JavaScript the page reads the same, just without them.
 
 // The scene is decoration, so it loads once the page has settled
 if (document.querySelector(".monkey3d")) {
   const load = () => import("/monkey.min.js");
   "requestIdleCallback" in window ? requestIdleCallback(load, { timeout: 2000 }) : setTimeout(load, 300);
-}
-
-// Copy the email address: a mailto link does nothing for people without a mail app
-for (const button of document.querySelectorAll("button.copy")) {
-  button.hidden = !navigator.clipboard;
-  button.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(button.dataset.copy);
-      button.textContent = "copied";
-    } catch {
-      button.textContent = "press Ctrl+C";
-      getSelection().selectAllChildren(button.previousElementSibling);
-    }
-    clearTimeout(button.timer);
-    button.timer = setTimeout(() => (button.textContent = "copy"), 2000);
-  });
 }
 
 // The time in Lutsk, so people in other time zones know when I'm around
