@@ -825,12 +825,15 @@ if (onsenBox) {
     // Placed so the water line falls at the same height on the monkey at any size
     return { g, lid, sleepy, base: LEVEL * (1 - scale) - (sleepy ? 2 : 0), phase: Math.random() * 6, blink: 2 + Math.random() * 4 };
   };
-  // Grown-ups, as many as the width has room for, and two little ones
-  const adults = [[0.35, false], [0.1, true], [-0.3, false], [0.25, false], [-0.15, true], [-0.35, false]].map(([turn, sleepy]) =>
-    soaker(1, turn, sleepy),
-  );
-  const littles = [soaker(0.55, -0.5, false), soaker(0.55, 0.5, false)];
-  const soakers = [...adults, ...littles];
+  // A few monkeys, each up to something of its own: a mother dozing with her little one, one
+  // looking about, one that dips under to the eyes now and then, and on wide screens one sat
+  // with its back to you, watching the shore
+  const mother = soaker(1.05, 0.25, true);
+  const little = soaker(0.55, -0.6, false);
+  const looker = Object.assign(soaker(1, 0.3, false), { look: true });
+  const dipper = Object.assign(soaker(0.92, -0.2, false), { dip: true });
+  const away = soaker(0.95, Math.PI - 0.5, false);
+  const soakers = [mother, little, looker, dipper, away];
 
   // Steam: each wisp rises at its own pace, to its own height, swaying its own way, and when it
   // has faded it starts again somewhere new, more often near a monkey, so nothing repeats
@@ -908,21 +911,23 @@ if (onsenBox) {
     lanternPart2.visible = treePart2.visible = roomy;
     onShore(lanternPart2, 0.3 * long, 7, L);
     onShore(treePart2, -0.33 * long, 9, T);
-    // Grown-ups about 46 units apart across the pool (one on a phone), and a little one beside
-    // the middle one, with a gap between them, turned toward it; a second little one when
-    // there are five or more grown-ups
+    // Spread unevenly and at different distances from the shore; the one with its back turned
+    // only on very wide screens. On a phone, the one looking about and the little one.
     for (const m of soakers) m.g.visible = false;
-    const count = wide ? Math.max(3, Math.min(adults.length, Math.floor((1.7 * long) / 46) + 1)) : 1;
-    const step = count > 1 ? (1.7 * long) / (count - 1) : 0;
-    const place = (m, x) => {
+    const place = (m, x, z) => {
       m.g.visible = true;
-      // Out in the water, clear of the stones along the shore
-      m.g.position.set(x, m.g.position.y, 7);
+      m.g.position.set(x, m.g.position.y, z);
     };
-    for (let i = 0; i < count; i++) place(adults[i], count > 1 ? -0.85 * long + i * step : -10);
-    const middle = adults[Math.floor((count - 1) / 2)].g.position.x;
-    place(littles[0], middle + (wide ? 17 : 21));
-    if (count >= 5) place(littles[1], adults[count - 1].g.position.x - 20);
+    if (wide) {
+      place(looker, -0.62 * long, 5);
+      place(mother, -0.06 * long, 8);
+      place(little, -0.06 * long + 15, 10);
+      place(dipper, 0.5 * long, 4);
+      if (long > 105) place(away, 0.82 * long, 9);
+    } else {
+      place(looker, -10, 7);
+      place(little, 11, 9);
+    }
     footSteam.forEach((s) => puff(s, true));
     draw(0);
   }
@@ -932,7 +937,17 @@ if (onsenBox) {
   function draw(dt) {
     ft += dt;
     for (const m of soakers) {
-      m.g.position.y = m.base + (reduceMotion ? 0 : Math.sin(ft * 0.9 + m.phase) * 0.35);
+      let y = m.base;
+      if (!reduceMotion) {
+        // The little one bobs quicker
+        y += Math.sin(ft * (m === little ? 1.6 : 0.9) + m.phase) * 0.35;
+        // Every fourteen seconds or so, under to the eyes and back up
+        const dive = (ft + m.phase) % 14;
+        if (m.dip && dive < 3) y -= 6 * Math.sin((dive / 3) * Math.PI);
+        // Turning slowly from side to side, lingering at each end
+        if (m.look) m.g.rotation.y = 0.3 + 0.65 * Math.sin(ft * 0.3 + m.phase) ** 3;
+      }
+      m.g.position.y = y;
       if (!m.sleepy) m.lid.visible = !reduceMotion && (ft + m.phase) % m.blink < 0.14;
     }
     for (const s of footSteam) {
