@@ -523,9 +523,73 @@ function applyTheme() {
   screenGlow = night ? 5 : 2;
   stars.visible = night;
   for (const z of zs) z.userData.mat.color.setHex(night ? 0xc9d1dc : 0x5b6574);
+  // The weather in Lutsk (see page.js): grey, softer light under cloud, rain or snow, and a
+  // mist the colour of the page in fog, fading the back of the scene
+  const sky = document.documentElement.dataset.weather;
+  if (sky && sky !== "clear") {
+    sun.intensity *= 0.25;
+    hemi.intensity *= 0.85;
+    if (!night) {
+      hemi.color.setHex(0xcfd6de);
+      hemi.groundColor.setHex(0x7d8590);
+    }
+  }
+  const page = new THREE.Color().setStyle(getComputedStyle(document.body).backgroundColor);
+  scene.fog = sky === "fog" ? new THREE.Fog(page, 30, 62) : null;
+  hemiBase = hemi.intensity;
 }
+let hemiBase = 0;
 darkScheme.addEventListener("change", applyTheme);
+document.addEventListener("weather", applyTheme);
 applyTheme();
+
+// Rain: rings where the drops hit the water, each a few small cubes spreading and shrinking.
+// spot() gives a random place on the water for each new drop.
+function rainRings(parent, count, spot, size) {
+  const SEG = 8;
+  const mesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(size, size * 0.3, size),
+    new THREE.MeshBasicMaterial({ color: 0xf4fbff, transparent: true, opacity: 0.85, depthWrite: false }),
+    count * SEG,
+  );
+  parent.add(mesh);
+  const drops = Array.from({ length: count }, () => ({ at: spot(), p: Math.random() }));
+  const scale = new THREE.Vector3();
+  const place = new THREE.Vector3();
+  const turn = new THREE.Quaternion();
+  return (dt, on) => {
+    mesh.visible = on && !reduceMotion;
+    if (!mesh.visible) return;
+    drops.forEach((d, i) => {
+      d.p += dt / 0.7;
+      if (d.p >= 1) Object.assign(d, { p: d.p % 1, at: spot() });
+      const r = size * (0.5 + d.p * 3);
+      scale.setScalar(1 - d.p * 0.8);
+      for (let k = 0; k < SEG; k++) {
+        const a = (k / SEG) * Math.PI * 2;
+        place.set(d.at[0] + Math.cos(a) * r, d.at[1], d.at[2] + Math.sin(a) * r);
+        mesh.setMatrixAt(i * SEG + k, m4.compose(place, turn, scale));
+      }
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+  };
+}
+const raining = () => ["rain", "storm"].includes(document.documentElement.dataset.weather);
+const topRain = rainRings(model, 22, () => {
+  const [x, , z] = water[Math.floor(Math.random() * water.length)];
+  return [x, 0.6, z];
+}, 0.9);
+// In a storm, now and then a flash lights everything up for a moment
+let flashUntil = 0;
+let nextFlash = 0;
+function flashing() {
+  if (document.documentElement.dataset.weather !== "storm" || reduceMotion) return false;
+  if (now() > nextFlash) {
+    flashUntil = now() + 0.12 + Math.random() * 0.1;
+    nextFlash = now() + 6 + Math.random() * 10;
+  }
+  return now() < flashUntil;
+}
 
 const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
 // From the front, a little to the side and above: the face over the laptop, the tree beside
@@ -605,6 +669,8 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.1);
   if (!onScreen) return;
   t += dt;
+  topRain(dt, raining());
+  hemi.intensity = flashing() ? hemiBase * 2.6 : hemiBase;
 
   for (const s of steam) {
     const p = reduceMotion ? 0.3 : (t * 0.15 + s.userData.t) % 1;
@@ -723,6 +789,7 @@ if (onsenBox) {
     footSun.color.copy(sun.color);
     footSun.intensity = sun.intensity;
     lanternGlow.intensity = lanternLight.intensity;
+    footScene.fog = scene.fog ? new THREE.Fog(scene.fog.color, 100, 160) : null;
   };
 
 
@@ -1102,8 +1169,13 @@ if (onsenBox) {
 
   const footClock = new THREE.Clock();
   let ft = 0;
+  const footRain = rainRings(footScene, 45, () => [(Math.random() * 2 - 1) * poolLong, LEVEL - 0.3, -6 + Math.random() * 28], 1.1);
+  document.addEventListener("weather", syncLight);
   function draw(dt) {
     ft += dt;
+    // The light follows the scene at the top, storm flashes too
+    footHemi.intensity = flashing() ? hemiBase * 2.6 : hemiBase;
+    footRain(dt, raining());
     for (const m of soakers) {
       let y = m.base;
       if (!reduceMotion) {

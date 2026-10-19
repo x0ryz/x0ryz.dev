@@ -11,23 +11,28 @@ console.log(
 
 // A few seasonal particles over the whole page, in front of the scene and behind the text:
 // snow, petals or leaves, and fireflies on summer nights. Small squares, like the voxels.
+// The weather in Lutsk takes over when it rains or snows (see page.js): rain streaks, or snow
+// whatever the season.
 (() => {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   const canvas = document.querySelector(".season-bg");
   const ctx = canvas.getContext("2d");
-  const season = document.documentElement.dataset.season;
+  const root = document.documentElement;
   const dark = matchMedia("(prefers-color-scheme: dark)");
 
-  const LOOK = {
-    winter: { light: ["#c3ccd8", "#d2d9e2"], dark: ["#8d99a9", "#b5bfcc"], size: 5, spin: false },
-    spring: { light: ["#f2a7bf", "#f6c2d2"], dark: ["#c77a95", "#e29ab3"], size: 6, spin: true },
-    autumn: { light: ["#d2462a", "#e0782c", "#e8b23a"], dark: ["#b5442b", "#c96a2c", "#c99a35"], size: 7, spin: true },
-    summer: { light: [], dark: ["#d8f56a"], size: 4, spin: false, fireflies: true },
-  }[season];
-  if (!LOOK) return;
+  const LOOKS = {
+    winter: { light: ["#c3ccd8", "#d2d9e2"], dark: ["#8d99a9", "#b5bfcc"], size: 5, spin: false, count: 10 },
+    spring: { light: ["#f2a7bf", "#f6c2d2"], dark: ["#c77a95", "#e29ab3"], size: 6, spin: true, count: 10 },
+    autumn: { light: ["#d2462a", "#e0782c", "#e8b23a"], dark: ["#b5442b", "#c96a2c", "#c99a35"], size: 7, spin: true, count: 10 },
+    summer: { light: [], dark: ["#d8f56a"], size: 4, spin: false, fireflies: true, count: 8 },
+    snow: { light: ["#b7c2d0", "#c8d1dc"], dark: ["#8d99a9", "#b5bfcc"], size: 6, spin: false, count: 40 },
+    rain: { light: ["#8399b2"], dark: ["#6a7f98"], size: 2, spin: false, rain: true, count: 70 },
+  };
+  const weather = () => ({ rain: "rain", storm: "rain", snow: "snow" })[root.dataset.weather];
+  let LOOK = null;
+  let bits = [];
 
-  const COUNT = LOOK.fireflies ? 8 : 10;
   let w = 0;
   let h = 0;
   const ratio = Math.min(devicePixelRatio, 2);
@@ -41,22 +46,25 @@ console.log(
   addEventListener("resize", resize);
   resize();
 
-  const bits = Array.from({ length: COUNT }, () => ({
-    x: Math.random() * w,
-    y: Math.random() * h,
-    speed: 14 + Math.random() * 16,
-    phase: Math.random() * 10,
-    pick: Math.random(),
-  }));
+  function pick() {
+    LOOK = LOOKS[weather() || root.dataset.season];
+    bits = Array.from({ length: LOOK ? LOOK.count : 0 }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      speed: LOOK?.rain ? 520 + Math.random() * 200 : 14 + Math.random() * 16,
+      phase: Math.random() * 10,
+      pick: Math.random(),
+    }));
+  }
 
   let last = 0;
   let running = false;
   function frame(now) {
     const dt = Math.min((now - last) / 1000, 0.1);
     last = now;
-    const colors = dark.matches ? LOOK.dark : LOOK.light;
+    const colors = LOOK ? (dark.matches ? LOOK.dark : LOOK.light) : [];
     ctx.clearRect(0, 0, w, h);
-    // Nothing to draw (fireflies on a summer day): stop until the theme turns dark
+    // Nothing to draw (fireflies on a summer day): stop until the theme or the weather changes
     if (!colors.length) {
       running = false;
       return;
@@ -67,6 +75,23 @@ console.log(
       let x;
       let y;
       let alpha = 0.8;
+      if (LOOK.rain) {
+        // Thin streaks falling fast, a little aslant
+        b.y += b.speed * dt;
+        b.x += b.speed * 0.12 * dt;
+        if (b.y > h + 20) {
+          b.y = -20;
+          b.x = Math.random() * w * 1.1 - w * 0.1;
+        }
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = colors[0];
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.rotate(-0.12);
+        ctx.fillRect(0, 0, s, 18);
+        ctx.restore();
+        continue;
+      }
       if (LOOK.fireflies) {
         // Wander around their spot and pulse
         x = b.x + Math.sin(t * 0.4 + b.phase) * 40;
@@ -102,5 +127,10 @@ console.log(
     requestAnimationFrame(frame);
   }
   dark.addEventListener("change", start);
+  document.addEventListener("weather", () => {
+    pick();
+    start();
+  });
+  pick();
   start();
 })();
