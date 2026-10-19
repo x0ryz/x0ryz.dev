@@ -19,8 +19,25 @@ if (!document.documentElement.dataset.weather)
       document.documentElement.dataset.weather = w.kind;
       document.dispatchEvent(new Event("weather"));
       tick?.();
+      storm();
     })
     .catch(() => {});
+
+// In a storm, now and then a flash lights up the whole page for a moment; the scenes in
+// monkey.js listen for it and light up with it
+function storm() {
+  if (document.documentElement.dataset.weather !== "storm") return;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const flash = () => {
+    const length = 120 + Math.random() * 100;
+    document.documentElement.classList.add("flash");
+    document.dispatchEvent(new CustomEvent("flash", { detail: length / 1000 }));
+    setTimeout(() => document.documentElement.classList.remove("flash"), length);
+    setTimeout(flash, 6000 + Math.random() * 10000);
+  };
+  setTimeout(flash, 3000 + Math.random() * 4000);
+}
+storm();
 
 // The time in Lutsk, so people in other time zones know when I'm around
 const clock = document.querySelector(".clock");

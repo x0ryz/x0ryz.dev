@@ -534,8 +534,10 @@ function applyTheme() {
       hemi.groundColor.setHex(0x7d8590);
     }
   }
-  const page = new THREE.Color().setStyle(getComputedStyle(document.body).backgroundColor);
-  scene.fog = sky === "fog" ? new THREE.Fog(page, 30, 62) : null;
+  // The page's own colour, misted a little, like the fog over the page (see style.css)
+  const paper = getComputedStyle(document.documentElement).getPropertyValue("--paper").trim();
+  const mist = new THREE.Color(paper).lerp(new THREE.Color(night ? 0x5a6573 : 0xffffff), 0.3);
+  scene.fog = sky === "fog" ? new THREE.Fog(mist, 30, 62) : null;
   hemiBase = hemi.intensity;
 }
 let hemiBase = 0;
@@ -579,17 +581,10 @@ const topRain = rainRings(model, 22, () => {
   const [x, , z] = water[Math.floor(Math.random() * water.length)];
   return [x, 0.6, z];
 }, 0.9);
-// In a storm, now and then a flash lights everything up for a moment
+// In a storm the page flashes now and then (see page.js), and the scenes light up with it
 let flashUntil = 0;
-let nextFlash = 0;
-function flashing() {
-  if (document.documentElement.dataset.weather !== "storm" || reduceMotion) return false;
-  if (now() > nextFlash) {
-    flashUntil = now() + 0.12 + Math.random() * 0.1;
-    nextFlash = now() + 6 + Math.random() * 10;
-  }
-  return now() < flashUntil;
-}
+document.addEventListener("flash", (e) => (flashUntil = now() + e.detail));
+const flashing = () => now() < flashUntil;
 
 const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
 // From the front, a little to the side and above: the face over the laptop, the tree beside
