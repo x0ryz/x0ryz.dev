@@ -27,7 +27,7 @@ console.log(
     autumn: { light: ["#d2462a", "#e0782c", "#e8b23a"], dark: ["#b5442b", "#c96a2c", "#c99a35"], size: 7, spin: true, count: 10 },
     summer: { light: [], dark: ["#d8f56a"], size: 4, spin: false, fireflies: true, count: 8 },
     snow: { light: ["#b7c2d0", "#c8d1dc"], dark: ["#8d99a9", "#b5bfcc"], size: 6, spin: false, count: 40 },
-    rain: { light: ["#8399b2"], dark: ["#6a7f98"], size: 2, spin: false, rain: true, count: 70 },
+    rain: { light: ["#9aadc2"], dark: ["#56697f"], size: 1.5, spin: false, rain: true, count: 40 },
   };
   const weather = () => ({ rain: "rain", storm: "rain", snow: "snow" })[root.dataset.weather];
   let LOOK = null;
@@ -83,7 +83,8 @@ console.log(
           b.y = -20;
           b.x = Math.random() * w * 1.1 - w * 0.1;
         }
-        ctx.globalAlpha = 0.7;
+        // Faint, so the text in front of it stays easy to read
+        ctx.globalAlpha = 0.4;
         ctx.fillStyle = colors[0];
         ctx.save();
         ctx.translate(b.x, b.y);

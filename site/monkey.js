@@ -537,7 +537,7 @@ function applyTheme() {
   // The page's own colour, misted a little, like the fog over the page (see style.css)
   const paper = getComputedStyle(document.documentElement).getPropertyValue("--paper").trim();
   const mist = new THREE.Color(paper).lerp(new THREE.Color(night ? 0x5a6573 : 0xffffff), 0.3);
-  scene.fog = sky === "fog" ? new THREE.Fog(mist, 30, 62) : null;
+  scene.fog = sky === "fog" ? new THREE.Fog(mist, 22, 50) : null;
   hemiBase = hemi.intensity;
 }
 let hemiBase = 0;
@@ -784,7 +784,7 @@ if (onsenBox) {
     footSun.color.copy(sun.color);
     footSun.intensity = sun.intensity;
     lanternGlow.intensity = lanternLight.intensity;
-    footScene.fog = scene.fog ? new THREE.Fog(scene.fog.color, 100, 160) : null;
+    footScene.fog = scene.fog ? new THREE.Fog(scene.fog.color, 85, 135) : null;
   };
 
 
@@ -1171,19 +1171,22 @@ if (onsenBox) {
     // The light follows the scene at the top, storm flashes too
     footHemi.intensity = flashing() ? hemiBase * 2.6 : hemiBase;
     footRain(dt, raining());
+    // From midnight to six in Kyiv they all sleep, like the monkey at the top: eyes shut, sunk a
+    // little lower, breathing slowly, nobody diving or looking about
+    const night = nightInKyiv();
     for (const m of soakers) {
-      let y = m.base;
+      let y = m.base - (night && !m.sleepy ? 1.5 : 0);
       if (!reduceMotion) {
-        // The little one bobs quicker
-        y += Math.sin(ft * (m === little ? 1.6 : 0.9) + m.phase) * 0.35;
+        // The little one bobs quicker; asleep, everyone slower
+        y += Math.sin(ft * (night ? 0.5 : m === little ? 1.6 : 0.9) + m.phase) * 0.35;
         // Every fourteen seconds or so, under to the eyes and back up
         const dive = (ft + m.phase) % 14;
-        if (m.dip && dive < 3) y -= 6 * Math.sin((dive / 3) * Math.PI);
+        if (m.dip && !night && dive < 3) y -= 6 * Math.sin((dive / 3) * Math.PI);
         // Turning slowly from side to side, lingering at each end
-        if (m.look) m.g.rotation.y = 0.3 + 0.65 * Math.sin(ft * 0.3 + m.phase) ** 3;
+        if (m.look && !night) m.g.rotation.y = 0.3 + 0.65 * Math.sin(ft * 0.3 + m.phase) ** 3;
       }
       m.g.position.y = y;
-      if (!m.sleepy) m.lid.visible = !reduceMotion && (ft + m.phase) % m.blink < 0.14;
+      if (!m.sleepy) m.lid.visible = night || (!reduceMotion && (ft + m.phase) % m.blink < 0.14);
     }
     for (const s of footSteam) {
       const u = s.userData;

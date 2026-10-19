@@ -250,41 +250,47 @@ h2 {
 
 .clock { color: var(--muted); font-variant-numeric: tabular-nums; }
 
-/* The weather in Lutsk, set on <html> by page.js: the page greys under cloud and rain, turns
-   cooler and brighter in snow, mists over at the top and bottom in fog, and lights up for a
-   moment in a storm. The text keeps its contrast; the links lose a little of their colour. */
-:root[data-weather="cloudy"] { --weather-tint: #98a2ad; --weather-mix: 9%; }
+/* The weather in Lutsk, set on <html> by page.js: the page greys a touch under cloud and rain,
+   turns cooler and brighter in snow, drifts with mist in fog, and lights up for a moment in a
+   storm. The text and the links keep their colour and contrast. */
+:root[data-weather="cloudy"] { --weather-tint: #98a2ad; --weather-mix: 8%; }
 :root[data-weather="rain"],
-:root[data-weather="storm"] { --weather-tint: #7d90a5; --weather-mix: 12%; }
+:root[data-weather="storm"] { --weather-tint: #8a9bad; --weather-mix: 7%; }
 :root[data-weather="snow"] { --weather-tint: #f4f8fc; --weather-mix: 45%; }
-:root[data-weather="fog"] { --weather-tint: #f6f7f8; --weather-mix: 35%; }
+:root[data-weather="fog"] { --weather-tint: #f6f7f8; --weather-mix: 30%; }
 @media (prefers-color-scheme: dark) {
-  :root[data-weather="cloudy"] { --weather-tint: #2a3038; --weather-mix: 35%; }
+  :root[data-weather="cloudy"] { --weather-tint: #2a3038; --weather-mix: 30%; }
   :root[data-weather="rain"],
-  :root[data-weather="storm"] { --weather-tint: #1d2b3c; --weather-mix: 45%; }
+  :root[data-weather="storm"] { --weather-tint: #1d2b3c; --weather-mix: 30%; }
   :root[data-weather="snow"] { --weather-tint: #33404f; --weather-mix: 30%; }
   :root[data-weather="fog"] { --weather-tint: #39414b; --weather-mix: 35%; }
 }
-:root:is([data-weather="cloudy"], [data-weather="rain"], [data-weather="storm"], [data-weather="fog"]) a {
-  color: color-mix(in srgb, var(--link) 80%, var(--muted));
-}
-/* Fog: a mist over the top and bottom of the window, in front of the scene, behind the text */
+/* Fog: banks of mist drifting slowly across the window, thicker at the top and bottom, in front
+   of the scenes and behind the text */
 :root[data-weather="fog"] body::after {
+  --mist: color-mix(in srgb, var(--paper), white 55%);
   content: "";
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(
-    var(--weather-fog, color-mix(in srgb, var(--paper), white 30%)),
-    transparent 22%,
-    transparent 70%,
-    var(--weather-fog, color-mix(in srgb, var(--paper), white 30%))
-  );
-  opacity: 0.8;
+  background:
+    linear-gradient(var(--mist), transparent 28%, transparent 62%, var(--mist)),
+    /* Each bank sits inside its 200%-wide tile, so the tiles meet without a seam */
+    radial-gradient(24% 16% at 28% 36%, var(--mist), transparent),
+    radial-gradient(21% 14% at 74% 62%, var(--mist), transparent);
+  background-size: 100% 100%, 200% 100%, 200% 100%;
+  opacity: 0.85;
+  animation: mist 90s linear infinite;
+}
+@keyframes mist {
+  to { background-position: 0 0, -200% 0, -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-weather="fog"] body::after { animation: none; }
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-weather="fog"] body::after { --weather-fog: color-mix(in srgb, var(--paper), #5a6573 30%); }
+  :root[data-weather="fog"] body::after { --mist: color-mix(in srgb, var(--paper), #6a7584 35%); }
 }
 /* Storm: the flash, set for a moment by page.js */
 :root.flash body { background-color: color-mix(in srgb, var(--paper), white 55%); transition: none; }
