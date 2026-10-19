@@ -10,13 +10,12 @@ The monkey and its scene are built from code in [`site/monkey.js`](site/monkey.j
   - `index.html`, `404.html`, `style.css`
   - `season-pick.js` picks the season from the date before the page paints (`?season=spring|summer|autumn|winter` previews one)
   - `monkey.js` builds and animates the 3D scene, and the hot spring at the foot of the page where the same monkey soaks a few times over; the build bundles it with three.js into `monkey.min.js`, which the pages load
-  - `season.js` draws the falling snow, petals or leaves over the page
   - `page.js` loads the scene once the page is idle, and runs the clock in Lutsk
   - `og-<season>.png` are the link preview images, one per season
   - `_headers` sets the security headers (a strict Content-Security-Policy: every script and style comes from this site)
   - `fonts/` is Onest, under the SIL Open Font License
 - `scripts/build.mjs` builds `dist/`: a copy of `site/`, the bundled scene, and a hash of each stylesheet and script in the URLs that load it (`/style.css?v=1a2b3c4d`), so browsers never keep an old copy after a deploy.
-- `functions/weather.json.js` is a Cloudflare Pages Function: `/weather.json` is the weather in Lutsk from Open-Meteo, cached for half an hour. The scenes and the falling bits follow it (rain, snow, cloud, fog, storm), and the clock says it. `?weather=rain` (or `clear`, `cloudy`, `fog`, `snow`, `storm`) previews one.
+- `functions/weather.json.js` is a Cloudflare Pages Function: `/weather.json` is the weather in Lutsk from Open-Meteo, cached for half an hour. The scenes follow it (rain, snow, cloud, fog, storm), and the clock says it. `?weather=rain` (or `clear`, `cloudy`, `fog`, `snow`, `storm`) previews one.
 - `functions/og.png.js` is a Cloudflare Pages Function: `/og.png` serves the current season's preview image.
 - `cv/resume_en.yaml` is the source of `site/Bohdan_Barulin_CV.pdf`, in [RenderCV](https://rendercv.com) format.
 

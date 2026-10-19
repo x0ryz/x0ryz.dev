@@ -1,3 +1,14 @@
+// A note for whoever opens the browser console
+console.log(
+  [
+    "   .-\"\"\"-.",
+    "  / o   o \\    Hi! The monkey is built voxel by voxel in /monkey.js,",
+    " |    ^    |   no model files, just code.",
+    "  \\  '-'  /",
+    "   '-...-'     Looking for a Python backend developer? hello@x0ryz.dev",
+  ].join("\n"),
+);
+
 // Small things on the page that need a script: the scene, the weather and the clock.
 // Without JavaScript the page reads the same, just without them.
 
@@ -8,7 +19,7 @@ if (document.querySelector(".monkey3d")) {
 }
 
 // The weather in Lutsk, from /weather.json (functions/weather.json.js). It goes on <html> as
-// data-weather, where the scenes and the falling bits read it, and next to the clock.
+// data-weather, where the scenes read it, and next to the clock.
 let weather = null;
 if (!document.documentElement.dataset.weather)
   fetch("/weather.json")
@@ -23,16 +34,13 @@ if (!document.documentElement.dataset.weather)
     })
     .catch(() => {});
 
-// In a storm, now and then a flash lights up the whole page for a moment; the scenes in
-// monkey.js listen for it and light up with it
+// In a storm, now and then lightning flashes in the scenes (monkey.js listens for it)
 function storm() {
   if (document.documentElement.dataset.weather !== "storm") return;
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const flash = () => {
     const length = 120 + Math.random() * 100;
-    document.documentElement.classList.add("flash");
     document.dispatchEvent(new CustomEvent("flash", { detail: length / 1000 }));
-    setTimeout(() => document.documentElement.classList.remove("flash"), length);
     setTimeout(flash, 6000 + Math.random() * 10000);
   };
   setTimeout(flash, 3000 + Math.random() * 4000);

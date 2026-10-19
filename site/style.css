@@ -61,9 +61,7 @@ html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  /* The weather in Lutsk tints the page a little (see the weather rules below) */
-  background: color-mix(in srgb, var(--paper), var(--weather-tint, transparent) var(--weather-mix, 0%));
-  transition: background-color 1.5s ease;
+  background: var(--paper);
   color: var(--ink);
   font: 400 1.0625rem/1.6 "Onest", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -123,16 +121,7 @@ a:focus-visible {
 .intro-text p + p { margin-top: 1rem; color: var(--muted); }
 .intro-text .reach { margin-top: 1.5rem; }
 
-/* Seasonal particles over the whole page, drawn by season.js.
-   They fall in front of the scene but behind the text. */
-.season-bg {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
+/* The text sits in front of the scene where the two overlap */
 .intro h1,
 .intro-text,
 .row {
@@ -250,54 +239,6 @@ h2 {
 
 .clock { color: var(--muted); font-variant-numeric: tabular-nums; }
 
-/* The weather in Lutsk, set on <html> by page.js: the page greys a touch under cloud and rain,
-   turns cooler and brighter in snow, drifts with mist in fog, and lights up for a moment in a
-   storm. The text and the links keep their colour and contrast. */
-:root[data-weather="cloudy"] { --weather-tint: #98a2ad; --weather-mix: 8%; }
-:root[data-weather="rain"],
-:root[data-weather="storm"] { --weather-tint: #8a9bad; --weather-mix: 7%; }
-:root[data-weather="snow"] { --weather-tint: #f4f8fc; --weather-mix: 45%; }
-:root[data-weather="fog"] { --weather-tint: #f6f7f8; --weather-mix: 30%; }
-@media (prefers-color-scheme: dark) {
-  :root[data-weather="cloudy"] { --weather-tint: #2a3038; --weather-mix: 30%; }
-  :root[data-weather="rain"],
-  :root[data-weather="storm"] { --weather-tint: #1d2b3c; --weather-mix: 30%; }
-  :root[data-weather="snow"] { --weather-tint: #33404f; --weather-mix: 30%; }
-  :root[data-weather="fog"] { --weather-tint: #39414b; --weather-mix: 35%; }
-}
-/* Fog: banks of mist drifting slowly across the window, thicker at the top and bottom, in front
-   of the scenes and behind the text */
-:root[data-weather="fog"] body::after {
-  --mist: color-mix(in srgb, var(--paper), white 55%);
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background:
-    linear-gradient(var(--mist), transparent 28%, transparent 62%, var(--mist)),
-    /* Each bank sits inside its 200%-wide tile, so the tiles meet without a seam */
-    radial-gradient(24% 16% at 28% 36%, var(--mist), transparent),
-    radial-gradient(21% 14% at 74% 62%, var(--mist), transparent);
-  background-size: 100% 100%, 200% 100%, 200% 100%;
-  opacity: 0.85;
-  animation: mist 90s linear infinite;
-}
-@keyframes mist {
-  to { background-position: 0 0, -200% 0, -200% 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  :root[data-weather="fog"] body::after { animation: none; }
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-weather="fog"] body::after { --mist: color-mix(in srgb, var(--paper), #6a7584 35%); }
-}
-/* Storm: the flash, set for a moment by page.js */
-:root.flash body { background-color: color-mix(in srgb, var(--paper), white 55%); transition: none; }
-@media (prefers-color-scheme: dark) {
-  :root.flash body { background-color: color-mix(in srgb, var(--paper), #c9d4e4 30%); }
-}
-
 /* Text selection in the season's color */
 ::selection { background: color-mix(in srgb, var(--link) 22%, transparent); }
 
@@ -335,9 +276,7 @@ h2 {
 @media print {
   :root, :root[data-season] { --paper: #fff; --ink: #000; --muted: #444; --rule: #bbb; --link: #000; }
   .feature h2 { font-size: 18pt; }
-  .season-bg, .monkey3d, .clock, .onsen { display: none !important; }
-  body { background: #fff !important; }
-  body::after { display: none !important; }
+  .monkey3d, .clock, .onsen { display: none !important; }
   body { font-size: 11pt; }
   main { max-width: none; padding: 0; }
   .intro h1 { font-size: 32pt; white-space: normal; }

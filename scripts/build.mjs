@@ -25,7 +25,7 @@ await build({
 });
 
 // monkey.min.js first: page.js loads it, so page.js's own hash must include the new reference
-const assets = ["monkey.min.js", "style.css", "season-pick.js", "season.js", "page.js"];
+const assets = ["monkey.min.js", "style.css", "season-pick.js", "page.js"];
 const pages = ["page.js", "index.html", "404.html"];
 for (const asset of assets) {
   const hash = createHash("sha256").update(readFileSync(new URL(asset, dist))).digest("hex").slice(0, 8);

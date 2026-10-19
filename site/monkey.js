@@ -1,6 +1,6 @@
 // Voxel snow monkey in an onsen, built from code and rendered with three.js.
 // The scene follows the season set on <html> by the page: snow, sakura, bamboo or maple.
-// Falling snow, petals, leaves and fireflies are drawn over the whole page by season.js.
+// The weather in Lutsk (see page.js) plays out in the scenes only, so the text stays clear.
 // The model is laid out on a grid of half-size voxels: 2 grid units = 1 world unit.
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
