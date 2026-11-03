@@ -174,7 +174,7 @@ a:focus-visible {
   border-top: 1px solid var(--rule);
 }
 .body > * + * { margin-top: 1rem; }
-.body > p, .facts { max-width: var(--measure); }
+.body > p { max-width: var(--measure); }
 .side { margin-bottom: 1rem; }
 
 @media (min-width: 56rem) {
@@ -191,27 +191,6 @@ h2 {
   font-weight: 500;
   color: var(--muted);
 }
-
-/* hakobu */
-.feature h2 {
-  font-size: clamp(2.25rem, 4vw, 3rem);
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  line-height: 1.1;
-  color: var(--ink);
-}
-.feature h2 a { color: inherit; text-decoration: none; }
-.feature h2 a:hover { text-decoration: underline; text-decoration-thickness: 2px; }
-
-.facts {
-  padding: 0;
-  list-style: none;
-}
-.facts li {
-  padding: 0.55rem 0;
-  border-bottom: 1px solid var(--rule);
-}
-.facts li:first-child { border-top: 1px solid var(--rule); }
 
 /* Experience */
 .jobs article + article {
@@ -248,7 +227,6 @@ h2 {
   outline-offset: -3.5rem;
   border-radius: 4.5rem;
 }
-.side .kind { margin-top: 0.25rem; color: var(--muted); }
 
 /* The hot spring at the foot of the page, drawn by monkey.js. It reaches up behind the
    contact section, so the steam rises behind the links; without the script it takes no room. */
@@ -275,7 +253,6 @@ h2 {
 /* Printed, the page is a plain one-column document */
 @media print {
   :root, :root[data-season] { --paper: #fff; --ink: #000; --muted: #444; --rule: #bbb; --link: #000; }
-  .feature h2 { font-size: 18pt; }
   .monkey3d, .clock, .onsen { display: none !important; }
   body { font-size: 11pt; }
   main { max-width: none; padding: 0; }
