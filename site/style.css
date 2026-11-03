@@ -57,7 +57,12 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Scrollbars and form controls in the season's colors too */
+  scrollbar-color: var(--rule) var(--paper);
+  accent-color: var(--link);
+}
 
 body {
   margin: 0;
@@ -82,11 +87,16 @@ a {
   text-underline-offset: 0.2em;
   transition: text-decoration-color 0.15s ease;
 }
-a:hover { text-decoration-color: var(--link); text-decoration-thickness: 2px; }
+/* Hovered, a link lights up as a flat block, square like the voxels */
+a:hover {
+  text-decoration-color: var(--link);
+  text-decoration-thickness: 2px;
+  background: color-mix(in srgb, var(--link) 12%, transparent);
+  box-shadow: 0 0 0 0.2em color-mix(in srgb, var(--link) 12%, transparent);
+}
 a:focus-visible {
   outline: 2px solid var(--link);
   outline-offset: 3px;
-  border-radius: 2px;
 }
 
 /* Intro: the one loud element on the page */
@@ -120,6 +130,17 @@ a:focus-visible {
 }
 .intro-text p + p { margin-top: 1rem; color: var(--muted); }
 .intro-text .reach { margin-top: 1.5rem; }
+
+/* One voxel after the name, in the season's color: the scene's building block in the text */
+.intro h1 span:last-child::after,
+.lost h1::after {
+  content: "";
+  display: inline-block;
+  width: 0.15em;
+  height: 0.15em;
+  margin-left: 0.05em;
+  background: var(--link);
+}
 
 /* The text sits in front of the scene where the two overlap */
 .intro h1,
@@ -168,10 +189,11 @@ a:focus-visible {
   mask-image: linear-gradient(transparent 9%, #000 18%);
 }
 
+/* Sections are parted by a row of voxels instead of a hairline */
 .row {
   margin-top: 6rem;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--rule);
+  background: linear-gradient(90deg, var(--rule) 0.375rem, transparent 0) 0 0 / 0.75rem 0.25rem repeat-x;
 }
 .body > * + * { margin-top: 1rem; }
 .body > p { max-width: var(--measure); }
@@ -191,6 +213,15 @@ h2 {
   font-weight: 500;
   color: var(--muted);
 }
+/* Each section label starts with a voxel in the season's color */
+h2::before {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  margin-right: 0.6em;
+  background: var(--link);
+}
 
 /* Experience */
 .jobs article + article {
@@ -207,9 +238,19 @@ h2 {
   color: var(--muted);
 }
 .jobs p, .jobs ul { max-width: var(--measure); }
-.jobs ul { padding-left: 1.1rem; }
+.jobs ul { padding-left: 1.25rem; list-style: none; }
 .jobs li + li { margin-top: 0.5rem; }
-.jobs li::marker { color: var(--muted); }
+/* Square bullets, small voxels in the season's color */
+.jobs li { position: relative; }
+.jobs li::before {
+  content: "";
+  position: absolute;
+  left: -1.125rem;
+  top: 0.65em;
+  width: 0.375rem;
+  height: 0.375rem;
+  background: color-mix(in srgb, var(--link) 70%, transparent);
+}
 
 /* Each link takes taps a little around its text, about 44px tall in all */
 .links { display: flex; flex-wrap: wrap; gap: 1.125rem 1.5rem; }
@@ -225,8 +266,23 @@ h2 {
 .monkey3d:focus-visible {
   outline: 2px solid var(--link);
   outline-offset: -3.5rem;
-  border-radius: 4.5rem;
 }
+
+/* A quiet hint under the pool that the monkey can be petted */
+.monkey3d::after {
+  content: "click to pet";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2%;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.6s ease 1.5s;
+}
+@media (hover: none) { .monkey3d::after { content: "tap to pet"; } }
+.monkey3d.ready::after { opacity: 0.8; }
 
 /* The hot spring at the foot of the page, drawn by monkey.js. It reaches up behind the
    contact section, so the steam rises behind the links; without the script it takes no room. */
@@ -259,7 +315,8 @@ h2 {
   .intro h1 { font-size: 32pt; white-space: normal; }
   .intro-bottom { margin-top: 1rem; display: block; }
   .reach { display: none; }
-  .row { margin-top: 1.5rem; padding-top: 0.75rem; break-inside: avoid; display: grid; grid-template-columns: 9rem 1fr; column-gap: 1.5rem; }
+  h2::before, .intro h1 span::after { display: none; }
+  .row { background: none; border-top: 1px solid var(--rule); margin-top: 1.5rem; padding-top: 0.75rem; break-inside: avoid; display: grid; grid-template-columns: 9rem 1fr; column-gap: 1.5rem; }
   .contacts a[href^="http"]::after { content: " (" attr(href) ")"; color: var(--muted); }
 }
 
